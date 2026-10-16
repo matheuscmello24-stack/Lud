@@ -121,23 +121,25 @@
     if (mine && g.mandante === mine) hc += " mine";
     if (mine && g.visitante === mine) ac += " mine";
 
-    // Centre of the bar: the official VS mark until there is a score.
-    var center;
-    if ((done || live) && hasScore(g)) {
-      var tag = live ? '<span class="tag live">Ao vivo</span>' : g.status === "wo" ? '<span class="tag">W.O.</span>' : '<span class="tag">Final</span>';
-      center = '<div class="vs score-box"><div class="score">' + g.placar[0] + "<i>×</i>" + g.placar[1] + "</div>" +
-        (g.parciais && g.parciais.length ? '<div class="sets">' + g.parciais.map(esc).join(" ") + "</div>" : tag) + "</div>";
-    } else if (g.status === "adiado") {
-      center = '<div class="vs score-box"><div class="score small">Adiado</div></div>';
-    } else {
-      center = '<div class="vs"><img src="assets/vs.png" alt="contra"></div>';
-    }
+    // The official VS mark always sits in the centre; scores flank it, as in the art.
+    var scored = (done || live) && hasScore(g);
+    var sh = scored ? '<div class="sc home-sc">' + g.placar[0] + "</div>" : '<div class="sc"></div>';
+    var sa = scored ? '<div class="sc away-sc">' + g.placar[1] + "</div>" : '<div class="sc"></div>';
+    var status = "";
+    if (live) status = '<span class="tag live">Ao vivo</span>';
+    else if (g.status === "encerrado") status = '<span class="tag">Final</span>';
+    else if (g.status === "wo") status = '<span class="tag">W.O.</span>';
+    else if (g.status === "adiado") status = '<span class="tag">Adiado</span>';
+    var sets = scored && g.parciais && g.parciais.length ? '<span class="sets">' + g.parciais.map(esc).join(" ") + "</span>" : "";
 
     return '<article class="game ' + (g.naipe === "M" ? "m" : "f") + (live ? " is-live" : "") + '" aria-label="' +
-      esc(mod.nome + " " + NAIPE[g.naipe] + ", " + g.hora + ", " + local + ", " + teamText(g.mandante) + " contra " + teamText(g.visitante)) + '">' +
+      esc(mod.nome + " " + NAIPE[g.naipe] + ", " + g.hora + ", " + local + ", " + teamText(g.mandante) + " contra " + teamText(g.visitante) +
+        (scored ? ", placar " + g.placar[0] + " a " + g.placar[1] : "")) + '">' +
       '<div class="bar">' +
-        '<div class="when"><span class="hora">' + esc(g.hora) + '</span><span class="mod-m">' + esc(mod.curto) + "</span></div>" +
-        teamHTML(g.mandante, hc) + center + teamHTML(g.visitante, ac) +
+        '<div class="when"><span class="hora">' + esc(g.hora) + '</span><span class="mod-m">' + esc(mod.curto) + "</span>" + status + "</div>" +
+        teamHTML(g.mandante, hc) + sh +
+        '<div class="vs"><img src="assets/vs.png" alt="contra">' + sets + "</div>" +
+        sa + teamHTML(g.visitante, ac) +
         '<div class="mod">' + esc(mod.curto) + "</div>" +
       "</div>" +
       (g.obs ? '<p class="obs">' + esc(g.obs) + "</p>" : "") +
