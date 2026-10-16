@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>JUD 2K26 · Tabela de Jogos</title>
+  <meta name="description" content="Tabela de jogos, resultados e classificação do JUD 2K26.">
+  <meta name="theme-color" content="#007eff">
+  <meta property="og:title" content="JUD 2K26 · Tabela de Jogos">
+  <meta property="og:description" content="Jogos, resultados e classificação em tempo real.">
+  <link rel="icon" href="assets/logo-jud.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:ital,wdth,wght@0,125,500..900;1,125,300..500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="side-legend" aria-hidden="true">
+    <span><i class="dot dot-f"></i>Modalidade feminina</span>
+    <span><i class="dot dot-m"></i>Modalidade masculina</span>
+  </div>
+
+  <header class="top">
+    <img class="logo" src="assets/logo-jud.png" alt="JUD 2K26">
+    <div class="top-title">
+      <h1>Tabela de jogos</h1>
+      <p id="updated" class="updated"></p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="jogos" aria-selected="true">Jogos</button>
+      <button role="tab" data-tab="classificacao" aria-selected="false">Classificação</button>
+    </nav>
+
+    <section class="filters" aria-label="Filtros">
+      <div class="days" id="days"></div>
+      <div class="chips" id="f-equipe" aria-label="Atlética"></div>
+      <div class="row-filters">
+        <div class="seg" id="f-naipe"></div>
+        <div class="chips small" id="f-mod"></div>
+      </div>
+      <div class="chips small" id="f-local"></div>
+    </section>
+
+    <section id="view-jogos" class="view"></section>
+    <section id="view-classificacao" class="view" hidden></section>
+
+    <p class="aviso" id="aviso"></p>
+
+    <button class="share" id="share" type="button">Compartilhar</button>
+  </main>
+
+  <footer class="foot">
+    <div class="legend-inline">
+      <span><i class="dot dot-f"></i>Feminino</span>
+      <span><i class="dot dot-m"></i>Masculino</span>
+    </div>
+    <img class="apoio" src="assets/apoiadores.png" alt="Realização e apoiadores">
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
