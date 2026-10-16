@@ -5,7 +5,6 @@
  *   status: "agendado" | "ao_vivo" | "encerrado" | "wo" | "adiado"
  *   placar: [mandante, visitante]          ex.: [3, 1]
  *   parciais: ["25/13", "25/17"]           (opcional, vôlei)
- *   video: "https://..."                   (opcional, link do replay)
  *   obs: "texto curto"                     (opcional)
  *
  * naipe: "F" = feminino (rosa) | "M" = masculino (amarelo)
@@ -19,18 +18,13 @@ window.JUD_DATA = {
     atualizadoEm: "2026-10-16T21:00:00-03:00",
     aviso:
       "Tabela de acompanhamento. Em caso de divergência, prevalece a súmula oficial da organização.",
-    // Link para envio de correção de placar (WhatsApp, formulário etc.). Deixe "" para ocultar.
-    linkCorrecao: "",
   },
-
-  // Pontuação usada na aba Classificação (ajuste conforme o regulamento).
-  pontuacao: { vitoria: 3, empate: 1, derrota: 0, wo: 0 },
 
   modalidades: {
     HAND: { nome: "Handebol", curto: "HAND" },
     BASQ: { nome: "Basquete", curto: "BASQ" },
     VOLEI: { nome: "Vôlei", curto: "VÔLEI", sets: true },
-    FUT: { nome: "Futebol", curto: "FUT" },
+    FUT: { nome: "Futsal", curto: "FUT" },
   },
 
   locais: {

@@ -8,7 +8,7 @@
   var NAIPE = { F: "Feminino", M: "Masculino" };
 
   var D = null;
-  var state = { tab: "jogos", dia: null, equipe: "", naipe: "", mod: "", local: "" };
+  var state = { dia: null, equipe: "", naipe: "", mod: "", local: "" };
 
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) {
@@ -39,11 +39,11 @@
   // ---------- URL state ----------
   function readHash() {
     var h = new URLSearchParams(location.hash.slice(1));
-    ["tab", "dia", "equipe", "naipe", "mod", "local"].forEach(function (k) { if (h.get(k)) state[k] = h.get(k); });
+    ["dia", "equipe", "naipe", "mod", "local"].forEach(function (k) { if (h.get(k)) state[k] = h.get(k); });
   }
   function writeHash() {
     var h = new URLSearchParams();
-    Object.keys(state).forEach(function (k) { if (state[k] && !(k === "tab" && state[k] === "jogos")) h.set(k, state[k]); });
+    Object.keys(state).forEach(function (k) { if (state[k]) h.set(k, state[k]); });
     var s = h.toString();
     history.replaceState(null, "", s ? "#" + s : location.pathname + location.search);
   }
@@ -88,7 +88,6 @@
       return '<button class="day' + (d === today ? " today" : "") + '" data-v="' + d + '" aria-pressed="' + (d === state.dia) + '"><b>' +
         DIAS[dt.getDay()] + "</b><small>" + String(dt.getDate()).padStart(2, "0") + "/" + String(dt.getMonth() + 1).padStart(2, "0") + "</small></button>";
     }).join("");
-    $("days").hidden = state.tab !== "jogos";
 
     var mine = store(STORE_KEY);
     $("f-equipe").innerHTML = chip("Todas as atléticas", "", state.equipe) +
@@ -104,7 +103,7 @@
     var locais = Object.keys(D.locais || {});
     $("f-local").innerHTML = locais.length > 1 ? chip("Todos os locais", "", state.local) +
       locais.map(function (k) { return chip(esc(D.locais[k].nome), k, state.local); }).join("") : "";
-    $("f-local").hidden = state.tab !== "jogos" || locais.length < 2;
+    $("f-local").hidden = locais.length < 2;
   }
 
   // ---------- games ----------
@@ -135,10 +134,6 @@
     else if (g.status === "wo") badge = '<span class="badge">W.O.</span>';
     else if (g.status === "adiado") badge = '<span class="badge">Adiado</span>';
 
-    var actions = [];
-    if (g.video) actions.push('<a href="' + esc(g.video) + '" target="_blank" rel="noopener">▶ Rever</a>');
-    if (D.evento.linkCorrecao) actions.push('<a href="' + esc(D.evento.linkCorrecao) + '" target="_blank" rel="noopener">Corrigir placar</a>');
-
     return '<article class="game ' + (g.naipe === "M" ? "m" : "f") + '" aria-label="' +
       esc(mod.nome + " " + NAIPE[g.naipe] + ", " + g.hora + ", " + teamText(g.mandante) + " contra " + teamText(g.visitante)) + '">' +
       '<div class="game-time">' + esc(g.hora) + "</div>" +
@@ -147,7 +142,6 @@
       (g.fase ? '<span class="sep">·</span><span>' + esc(g.fase) + "</span>" : "") + badge + "</div>" +
       '<div class="match">' + teamHTML(g.mandante, hc) + '<div class="vs">' + center + "</div>" + teamHTML(g.visitante, ac) + "</div>" +
       (g.obs ? '<div class="obs">' + esc(g.obs) + "</div>" : "") +
-      (actions.length ? '<div class="game-actions">' + actions.join("") + "</div>" : "") +
       '<div class="game-mod">' + esc(mod.curto) + "</div>" +
       "</article>";
   }
@@ -170,68 +164,10 @@
     $("view-jogos").innerHTML = html;
   }
 
-  // ---------- standings ----------
-  function renderClassificacao() {
-    var P = D.pontuacao || { vitoria: 3, empate: 1, derrota: 0, wo: 0 };
-    var mine = state.equipe || store(STORE_KEY);
-    var games = D.jogos.filter(function (g) {
-      if (state.naipe && g.naipe !== state.naipe) return false;
-      if (state.mod && g.modalidade !== state.mod) return false;
-      return true;
-    });
-    var groups = {};
-    games.forEach(function (g) {
-      var key = g.modalidade + "|" + g.naipe + "|" + (g.grupo || "");
-      var grp = groups[key] || (groups[key] = { mod: g.modalidade, naipe: g.naipe, grupo: g.grupo, rows: {} });
-      [g.mandante, g.visitante].forEach(function (t) {
-        grp.rows[t] = grp.rows[t] || { t: t, j: 0, v: 0, e: 0, d: 0, pro: 0, con: 0, pts: 0 };
-      });
-      if (!finished(g)) return;
-      var h = grp.rows[g.mandante], a = grp.rows[g.visitante];
-      var hs = g.placar[0], as = g.placar[1];
-      h.j++; a.j++; h.pro += hs; h.con += as; a.pro += as; a.con += hs;
-      if (hs === as) { h.e++; a.e++; h.pts += P.empate; a.pts += P.empate; }
-      else {
-        var w = hs > as ? h : a, l = hs > as ? a : h;
-        w.v++; l.d++; w.pts += P.vitoria; l.pts += g.status === "wo" ? P.wo : P.derrota;
-      }
-    });
-
-    var keys = Object.keys(groups).sort(function (x, y) {
-      var mods = Object.keys(D.modalidades);
-      var gx = groups[x], gy = groups[y];
-      return mods.indexOf(gx.mod) - mods.indexOf(gy.mod) || gx.naipe.localeCompare(gy.naipe) || String(gx.grupo || "").localeCompare(String(gy.grupo || ""));
-    });
-    if (!keys.length) { $("view-classificacao").innerHTML = '<div class="empty">Nenhuma modalidade com esses filtros.</div>'; return; }
-
-    var html = '<p class="table-note">Critérios: vitória ' + P.vitoria + " pt, empate " + P.empate + " pt, derrota " + P.derrota +
-      " pt. Desempate por saldo e, depois, por pontos/gols pró. Classificação provisória, calculada a partir dos jogos encerrados.</p>";
-    keys.forEach(function (k) {
-      var grp = groups[k], mod = D.modalidades[grp.mod] || { nome: grp.mod };
-      var sg = mod.sets ? "Saldo" : "SG";
-      var rows = Object.keys(grp.rows).map(function (t) { return grp.rows[t]; }).sort(function (a, b) {
-        return b.pts - a.pts || (b.pro - b.con) - (a.pro - a.con) || b.pro - a.pro || teamText(a.t).localeCompare(teamText(b.t));
-      });
-      html += '<div class="table-block"><h3><i class="dot dot-' + grp.naipe.toLowerCase() + '"></i>' + esc(mod.nome) + " " + NAIPE[grp.naipe] +
-        (grp.grupo ? " · " + esc(grp.grupo) : "") + "</h3>" +
-        '<div class="tbl-wrap"><table><thead><tr><th>#</th><th class="eq">Atlética</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th class="c-pc">Pró</th><th class="c-pc">Contra</th><th>' + sg + "</th></tr></thead><tbody>" +
-        rows.map(function (r, i) {
-          var s = r.pro - r.con;
-          return '<tr class="' + (r.t === mine ? "mine" : "") + '"><td class="pos">' + (i + 1) + '</td><td class="eq">' + esc(teamText(r.t)) +
-            '</td><td class="pts">' + r.pts + "</td><td>" + r.j + "</td><td>" + r.v + "</td><td>" + r.e + "</td><td>" + r.d +
-            "</td><td class=\"c-pc\">" + r.pro + "</td><td class=\"c-pc\">" + r.con + "</td><td>" + (s > 0 ? "+" : "") + s + "</td></tr>";
-        }).join("") + "</tbody></table></div></div>";
-    });
-    $("view-classificacao").innerHTML = html;
-  }
-
   // ---------- render ----------
   function render() {
     renderFilters();
-    document.querySelectorAll(".tabs button").forEach(function (b) { b.setAttribute("aria-selected", b.dataset.tab === state.tab); });
-    $("view-jogos").hidden = state.tab !== "jogos";
-    $("view-classificacao").hidden = state.tab !== "classificacao";
-    if (state.tab === "jogos") renderJogos(); else renderClassificacao();
+    renderJogos();
 
     var up = new Date(D.evento.atualizadoEm);
     $("updated").textContent = isNaN(up) ? "" : "Atualizado em " + up.toLocaleDateString("pt-BR") + " às " +
@@ -247,9 +183,6 @@
 
   // ---------- events ----------
   function bind() {
-    document.querySelector(".tabs").addEventListener("click", function (e) {
-      var b = e.target.closest("button"); if (!b) return; state.tab = b.dataset.tab; render();
-    });
     $("days").addEventListener("click", function (e) {
       var b = e.target.closest("button"); if (!b) return; state.dia = b.dataset.v; render();
     });
