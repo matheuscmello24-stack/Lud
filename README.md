@@ -6,7 +6,7 @@ Site estático (HTML, CSS e JS, sem build) com os jogos e resultados do JUD 2K26
 
 - `data/jogos.js`: **o único arquivo editado durante o evento** (jogos, placares, equipes e locais).
 - `index.html`, `styles.css`, `app.js`: página, identidade visual e lógica.
-- `assets/`: logo e faixa de apoiadores, extraídas da arte oficial. Troque pelas versões vetoriais quando houver.
+- `assets/`: artes oficiais (fundos desktop e mobile, marca VS, fonte Anton). A logo e a faixa de apoiadores ainda são recortes da arte de sábado; troque pelas versões finais quando chegarem.
 
 ## Lançar um resultado
 

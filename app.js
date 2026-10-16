@@ -5,6 +5,7 @@
   var REFRESH_MS = 60000;
   var STORE_KEY = "jud2k26:equipe";
   var DIAS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+  var DIAS_LONGO = ["DOMINGO", "SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"];
   var NAIPE = { F: "Feminino", M: "Masculino" };
 
   var D = null;
@@ -120,46 +121,44 @@
     if (mine && g.mandante === mine) hc += " mine";
     if (mine && g.visitante === mine) ac += " mine";
 
+    // Centre of the bar: the official VS mark until there is a score.
     var center;
     if ((done || live) && hasScore(g)) {
-      center = '<div class="score">' + g.placar[0] + "<i>×</i>" + g.placar[1] + "</div>" +
-        (g.parciais && g.parciais.length ? '<div class="sets">' + g.parciais.map(esc).join(" · ") + "</div>" : "");
+      var tag = live ? '<span class="tag live">Ao vivo</span>' : g.status === "wo" ? '<span class="tag">W.O.</span>' : '<span class="tag">Final</span>';
+      center = '<div class="vs score-box"><div class="score">' + g.placar[0] + "<i>×</i>" + g.placar[1] + "</div>" +
+        (g.parciais && g.parciais.length ? '<div class="sets">' + g.parciais.map(esc).join(" ") + "</div>" : tag) + "</div>";
+    } else if (g.status === "adiado") {
+      center = '<div class="vs score-box"><div class="score small">Adiado</div></div>';
     } else {
-      center = '<div class="label">VS</div>';
+      center = '<div class="vs"><img src="assets/vs.png" alt="contra"></div>';
     }
 
-    var badge = "";
-    if (live) badge = '<span class="badge live">Ao vivo</span>';
-    else if (g.status === "encerrado") badge = '<span class="badge">Encerrado</span>';
-    else if (g.status === "wo") badge = '<span class="badge">W.O.</span>';
-    else if (g.status === "adiado") badge = '<span class="badge">Adiado</span>';
-
-    return '<article class="game ' + (g.naipe === "M" ? "m" : "f") + '" aria-label="' +
-      esc(mod.nome + " " + NAIPE[g.naipe] + ", " + g.hora + ", " + teamText(g.mandante) + " contra " + teamText(g.visitante)) + '">' +
-      '<div class="game-time">' + esc(g.hora) + "</div>" +
-      '<div class="game-meta"><span class="hora">' + esc(g.hora) + '</span><span class="mod">' + esc(mod.curto) + "</span>" +
-      "<span>" + esc(mod.nome) + " " + NAIPE[g.naipe] + '</span><span class="sep">·</span><span>' + esc(local) + "</span>" +
-      (g.fase ? '<span class="sep">·</span><span>' + esc(g.fase) + "</span>" : "") + badge + "</div>" +
-      '<div class="match">' + teamHTML(g.mandante, hc) + '<div class="vs">' + center + "</div>" + teamHTML(g.visitante, ac) + "</div>" +
-      (g.obs ? '<div class="obs">' + esc(g.obs) + "</div>" : "") +
-      '<div class="game-mod">' + esc(mod.curto) + "</div>" +
+    return '<article class="game ' + (g.naipe === "M" ? "m" : "f") + (live ? " is-live" : "") + '" aria-label="' +
+      esc(mod.nome + " " + NAIPE[g.naipe] + ", " + g.hora + ", " + local + ", " + teamText(g.mandante) + " contra " + teamText(g.visitante)) + '">' +
+      '<div class="bar">' +
+        '<div class="when"><span class="hora">' + esc(g.hora) + '</span><span class="mod-m">' + esc(mod.curto) + "</span></div>" +
+        teamHTML(g.mandante, hc) + center + teamHTML(g.visitante, ac) +
+        '<div class="mod">' + esc(mod.curto) + "</div>" +
+      "</div>" +
+      (g.obs ? '<p class="obs">' + esc(g.obs) + "</p>" : "") +
       "</article>";
   }
 
   function renderJogos() {
-    var list = filtered(false).slice().sort(function (a, b) {
-      return a.hora.localeCompare(b.hora) || a.local.localeCompare(b.local);
-    });
+    var list = filtered(false);
     var mine = state.equipe || store(STORE_KEY);
     if (!list.length) { $("view-jogos").innerHTML = '<div class="empty">Nenhum jogo com esses filtros neste dia.</div>'; return; }
-    var html = "", last = null;
-    list.forEach(function (g) {
-      if (g.hora !== last) {
-        var n = list.filter(function (x) { return x.hora === g.hora; }).length;
-        html += '<div class="slot"><h2>' + esc(g.hora) + "</h2><span>" + n + (n > 1 ? " jogos" : " jogo") + "</span></div>";
-        last = g.hora;
-      }
-      html += gameHTML(g, mine);
+    // One block per venue, in time order, like the official schedule art.
+    var dt = parseISO(state.dia);
+    var dayLabel = DIAS_LONGO[dt.getDay()] + " " + String(dt.getDate()).padStart(2, "0") + "/" + String(dt.getMonth() + 1).padStart(2, "0");
+    var order = Object.keys(D.locais);
+    var byLocal = {};
+    list.forEach(function (g) { (byLocal[g.local] = byLocal[g.local] || []).push(g); });
+    var html = "";
+    Object.keys(byLocal).sort(function (a, b) { return order.indexOf(a) - order.indexOf(b); }).forEach(function (k) {
+      var games = byLocal[k].sort(function (a, b) { return a.hora.localeCompare(b.hora); });
+      html += '<section class="venue"><header class="venue-head"><h2>' + esc((D.locais[k] || { nome: k }).nome) + "</h2><span>" + dayLabel + "</span></header>" +
+        games.map(function (g) { return gameHTML(g, mine); }).join("") + "</section>";
     });
     $("view-jogos").innerHTML = html;
   }
