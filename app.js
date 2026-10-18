@@ -1,7 +1,8 @@
 (function () {
   "use strict";
 
-  var DATA_URL = "data/jogos.js";
+  var API_URL = "/api/data";
+  var SEED_URL = "data/seed.json";
   var REFRESH_MS = 60000;
   var STORE_KEY = "jud2k26:equipe";
   var DIAS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
@@ -28,13 +29,12 @@
   }
   function parseISO(s) { var p = s.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
 
-  // ---------- data loading (cache-busted, so results refresh without a full reload) ----------
+  // ---------- data loading: the admin's saved data, or the seed file until something is saved ----------
+  function getJSON(url) {
+    return fetch(url, { cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); });
+  }
   function loadData(cb) {
-    var s = document.createElement("script");
-    s.src = DATA_URL + "?v=" + Date.now();
-    s.onload = function () { s.remove(); cb(window.JUD_DATA); };
-    s.onerror = function () { s.remove(); cb(null); };
-    document.head.appendChild(s);
+    getJSON(API_URL).catch(function () { return getJSON(SEED_URL); }).then(cb, function () { cb(null); });
   }
 
   // ---------- URL state ----------
@@ -112,7 +112,6 @@
     var mod = D.modalidades[g.modalidade] || { nome: g.modalidade, curto: g.modalidade };
     var local = (D.locais[g.local] || { nome: g.local }).nome;
     var done = finished(g);
-    var live = g.status === "ao_vivo";
     var hc = "home", ac = "away";
     if (done && g.placar[0] !== g.placar[1]) {
       var homeWins = g.placar[0] > g.placar[1];
@@ -122,17 +121,16 @@
     if (mine && g.visitante === mine) ac += " mine";
 
     // The official VS mark always sits in the centre; scores flank it, as in the art.
-    var scored = (done || live) && hasScore(g);
+    var scored = done && hasScore(g);
     var sh = scored ? '<div class="sc home-sc">' + g.placar[0] + "</div>" : '<div class="sc"></div>';
     var sa = scored ? '<div class="sc away-sc">' + g.placar[1] + "</div>" : '<div class="sc"></div>';
     var status = "";
-    if (live) status = '<span class="tag live">Ao vivo</span>';
-    else if (g.status === "encerrado") status = '<span class="tag">Final</span>';
+    if (g.status === "encerrado") status = '<span class="tag">Final</span>';
     else if (g.status === "wo") status = '<span class="tag">W.O.</span>';
     else if (g.status === "adiado") status = '<span class="tag">Adiado</span>';
     var sets = scored && g.parciais && g.parciais.length ? '<span class="sets">' + g.parciais.map(esc).join(" ") + "</span>" : "";
 
-    return '<article class="game ' + (g.naipe === "M" ? "m" : "f") + (live ? " is-live" : "") + '" aria-label="' +
+    return '<article class="game ' + (g.naipe === "M" ? "m" : "f") + '" aria-label="' +
       esc(mod.nome + " " + NAIPE[g.naipe] + ", " + g.hora + ", " + local + ", " + teamText(g.mandante) + " contra " + teamText(g.visitante) +
         (scored ? ", placar " + g.placar[0] + " a " + g.placar[1] : "")) + '">' +
       '<div class="bar">' +

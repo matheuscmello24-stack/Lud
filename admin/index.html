@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>JUD 2K26 · Admin</title>
+  <meta name="theme-color" content="#0b1b3a">
+  <link rel="icon" href="../assets/logo-jud.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header class="top">
+    <div class="top-in">
+      <img src="../assets/logo-jud.png" alt="JUD 2K26" class="logo">
+      <strong class="brand">Admin</strong>
+      <nav class="top-links">
+        <a href="../" target="_blank" rel="noopener">Ver site</a>
+        <button type="button" id="sair" hidden>Sair</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- Login -->
+    <section id="login" class="card login" hidden>
+      <h1>Entrar no admin</h1>
+      <p class="muted">Use a senha definida pela organização.</p>
+      <form id="login-form" autocomplete="on">
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" name="senha" autocomplete="current-password" required>
+        <button type="submit" class="btn primary">Entrar</button>
+        <p class="erro" id="login-erro" role="alert"></p>
+      </form>
+    </section>
+
+    <!-- App -->
+    <section id="app" hidden>
+      <nav class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="resultados" aria-selected="true">Resultados</button>
+        <button type="button" role="tab" data-tab="jogos" aria-selected="false">Jogos</button>
+        <button type="button" role="tab" data-tab="cadastros" aria-selected="false">Cadastros</button>
+        <button type="button" role="tab" data-tab="evento" aria-selected="false">Evento</button>
+      </nav>
+
+      <div class="filters" id="filters">
+        <div class="chips" id="dias"></div>
+        <div class="chips" id="locais"></div>
+      </div>
+
+      <!-- Resultados -->
+      <div class="panel" data-panel="resultados">
+        <div id="lista-resultados"></div>
+      </div>
+
+      <!-- Jogos -->
+      <div class="panel" data-panel="jogos" hidden>
+        <form id="jogo-form" class="card">
+          <h2 id="jogo-form-titulo">Novo jogo</h2>
+          <div class="grid">
+            <div><label for="j-data">Data</label><input type="date" id="j-data" required></div>
+            <div><label for="j-hora">Horário</label><input type="time" id="j-hora" required step="300"></div>
+            <div><label for="j-local">Local</label><select id="j-local" required></select></div>
+            <div><label for="j-mod">Modalidade</label><select id="j-mod" required></select></div>
+            <div class="span2">
+              <span class="label">Naipe</span>
+              <div class="seg">
+                <input type="radio" name="naipe" id="j-naipe-f" value="F" required><label for="j-naipe-f"><i class="dot f"></i>Feminino</label>
+                <input type="radio" name="naipe" id="j-naipe-m" value="M"><label for="j-naipe-m"><i class="dot m"></i>Masculino</label>
+              </div>
+            </div>
+            <div><label for="j-mandante">Equipe 1 (esquerda)</label><select id="j-mandante" required></select></div>
+            <div><label for="j-visitante">Equipe 2 (direita)</label><select id="j-visitante" required></select></div>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn primary" id="jogo-salvar">Adicionar jogo</button>
+            <button type="button" class="btn" id="jogo-cancelar" hidden>Cancelar edição</button>
+          </div>
+          <p class="muted small" id="jogo-dica">Depois de adicionar, o formulário mantém data, local e modalidade e avança o horário em 1 hora, para agilizar o cadastro da grade.</p>
+        </form>
+        <h2 class="list-title" id="jogos-titulo"></h2>
+        <div id="lista-jogos"></div>
+      </div>
+
+      <!-- Cadastros -->
+      <div class="panel" data-panel="cadastros" hidden>
+        <section class="card">
+          <h2>Equipes</h2>
+          <p class="muted small">O complemento aparece em itálico fino depois do nome (ex.: UNIFACS <em>SSA</em>).</p>
+          <div id="cad-equipes" class="cad"></div>
+          <form class="cad-add" data-tipo="equipes">
+            <input name="nome" placeholder="Nome (ex.: UNIFACS)" aria-label="Nome da nova equipe" required maxlength="40">
+            <input name="destaque" placeholder="Complemento (opcional)" aria-label="Complemento" maxlength="20">
+            <button class="btn primary" type="submit">Adicionar</button>
+          </form>
+        </section>
+        <section class="card">
+          <h2>Locais</h2>
+          <div id="cad-locais" class="cad"></div>
+          <form class="cad-add" data-tipo="locais">
+            <input name="nome" placeholder="Nome (ex.: IFBA 3)" aria-label="Nome do novo local" required maxlength="40">
+            <button class="btn primary" type="submit">Adicionar</button>
+          </form>
+        </section>
+        <section class="card">
+          <h2>Modalidades</h2>
+          <p class="muted small">A sigla aparece na barra do jogo (ex.: HAND, FUT). Marque "sets" para mostrar o campo de parciais.</p>
+          <div id="cad-modalidades" class="cad"></div>
+          <form class="cad-add" data-tipo="modalidades">
+            <input name="nome" placeholder="Nome (ex.: Handebol)" aria-label="Nome da nova modalidade" required maxlength="40">
+            <input name="curto" placeholder="Sigla (ex.: HAND)" aria-label="Sigla" required maxlength="12">
+            <label class="check"><input type="checkbox" name="sets"> sets</label>
+            <button class="btn primary" type="submit">Adicionar</button>
+          </form>
+        </section>
+      </div>
+
+      <!-- Evento -->
+      <div class="panel" data-panel="evento" hidden>
+        <form id="evento-form" class="card">
+          <h2>Evento</h2>
+          <label for="ev-nome">Nome do evento</label>
+          <input id="ev-nome" maxlength="80" required>
+          <label for="ev-aviso">Aviso no rodapé do site</label>
+          <textarea id="ev-aviso" rows="3" maxlength="400"></textarea>
+          <div class="actions"><button type="submit" class="btn primary">Salvar</button></div>
+        </form>
+        <section class="card">
+          <h2>Backup</h2>
+          <p class="muted small">Baixa uma cópia de todos os dados (jogos, placares e cadastros) em JSON. Faça ao fim de cada dia.</p>
+          <button type="button" class="btn" id="backup">Baixar backup</button>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="admin.js"></script>
+</body>
+</html>

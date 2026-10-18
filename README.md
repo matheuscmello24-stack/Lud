@@ -1,25 +1,40 @@
 # JUD 2K26 · Tabela de Jogos
 
-Site estático (HTML, CSS e JS, sem build) com os jogos e resultados do JUD 2K26. A estrutura segue a do site do X Intermed Bahia: seletor de dia, filtro por atlética (que fica salvo no aparelho), filtros de naipe, modalidade e local e botão de compartilhar com os filtros na URL.
+Site com os jogos e resultados do JUD 2K26 e painel `/admin` para a organização cadastrar jogos, lançar placares e manter equipes, locais e modalidades. Hospedagem, funções e armazenamento no Netlify (plano gratuito), sem banco de dados externo.
 
-## Arquivos
+## Como funciona
 
-- `data/jogos.js`: **o único arquivo editado durante o evento** (jogos, placares, equipes e locais).
-- `index.html`, `styles.css`, `app.js`: página, identidade visual e lógica.
-- `assets/`: artes oficiais (fundos desktop e mobile, marca VS, fonte Anton). A logo e a faixa de apoiadores ainda são recortes da arte de sábado; troque pelas versões finais quando chegarem.
+- `index.html`, `styles.css`, `app.js`: site público. Consulta `/api/data` a cada 60 s; enquanto nada foi salvo pelo admin, usa `data/seed.json`.
+- `admin/`: painel da organização, protegido por senha.
+- `netlify/functions/data.mjs`: `GET /api/data`, leitura pública dos dados.
+- `netlify/functions/admin.mjs`: `POST /api/login` e `PUT /api/salvar`, exigem a senha. Valida os dados antes de gravar e recusa a gravação se outra pessoa salvou no meio do caminho (o admin recarrega e avisa).
+- `netlify/lib/shared.mjs`: validação e autenticação comuns.
+- `data/seed.json`: dados iniciais (grade de sábado 17/10). Depois do primeiro salvamento pelo admin, os dados passam a viver no Netlify Blobs e este arquivo deixa de ser usado.
 
-## Lançar um resultado
+## Publicar no Netlify (uma vez)
 
-No GitHub, abra `data/jogos.js`, clique no lápis (dá para fazer pelo celular), localize o jogo e altere:
+1. Em app.netlify.com: **Add new site → Import an existing project → GitHub** e escolha este repositório e a branch.
+2. Deixe build command em branco e publish directory como `.` (o `netlify.toml` já define isso).
+3. Em **Site configuration → Environment variables**, crie `ADMIN_PASSWORD` com uma senha forte (12+ caracteres). Sem ela, o admin não abre.
+4. Faça um novo deploy (**Deploys → Trigger deploy**) para a variável valer.
+5. Acesse `https://SEU-SITE.netlify.app/admin/` e entre com a senha.
 
-```js
-status: "encerrado", placar: [3, 1]
+Para trocar a senha: altere `ADMIN_PASSWORD` e faça novo deploy. Quem estiver logado precisará entrar de novo.
+
+## Uso do admin
+
+- **Resultados**: escolha o dia (e o local, se quiser), digite o placar e toque em *Salvar resultado*. Ao digitar o placar, a situação muda sozinha para *Encerrado*. Para W.O., escolha *W.O.* e informe o placar do regulamento. *Limpar resultado* volta o jogo para *Agendado*.
+- **Jogos**: cadastre, edite ou exclua jogos. Depois de adicionar, o formulário mantém data, local, modalidade e naipe e avança 1 hora, para cadastrar a grade em sequência. Excluir pede um segundo toque de confirmação.
+- **Cadastros**: equipes (com complemento em itálico, ex.: UNIFACS *SSA*), locais e modalidades (sigla da barra e opção de parciais por sets). Um cadastro em uso por algum jogo não pode ser excluído.
+- **Evento**: nome, aviso do rodapé e **Baixar backup** (JSON com tudo). Faça backup ao fim de cada dia.
+
+O site público reflete uma alteração em até ~30 s (cache de 10 s no Netlify + consulta a cada 60 s nos navegadores abertos; quem recarrega a página vê na hora).
+
+## Testar localmente
+
+```
+npm install
+ADMIN_PASSWORD=teste npm run dev
 ```
 
-Status possíveis: `agendado`, `ao_vivo`, `encerrado`, `wo`, `adiado`. Campos opcionais: `parciais` (vôlei) e `obs`. Depois, atualize `atualizadoEm` e faça o commit. A página recarrega os dados sozinha a cada 60 s.
-
-## Publicação
-
-Em GitHub Pages: Settings → Pages → Deploy from a branch → escolha a branch e a pasta `/ (root)`. Também funciona em Vercel ou Netlify sem nenhuma configuração.
-
-Para testar localmente: `python3 -m http.server` na pasta e abra `http://localhost:8000`.
+Site em `http://localhost:8888` e admin em `http://localhost:8888/admin/`. Os dados de teste ficam em `.netlify/blobs-dev` (ignorado pelo git).
