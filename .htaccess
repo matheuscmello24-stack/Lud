@@ -1,0 +1,27 @@
+# JUD 2K26 — configuração para Hostinger (LiteSpeed/Apache)
+Options -Indexes
+AddDefaultCharset UTF-8
+DirectoryIndex index.html
+
+# Força HTTPS (ative o SSL gratuito no hPanel antes)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Páginas e dados sempre atualizados; imagens e fontes em cache por 7 dias.
+  <FilesMatch "\.(html|js|css|json)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  <FilesMatch "\.(png|webp|ttf)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_mime.c>
+  AddType font/ttf .ttf
+  AddType image/webp .webp
+</IfModule>

@@ -1,2 +1,4 @@
-node_modules/
-.netlify/
+# Dados gravados pelo site em produção (não versionar)
+storage/*
+!storage/.htaccess
+dist/

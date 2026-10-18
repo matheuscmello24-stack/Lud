@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var API_URL = "/api/data";
+  var API_URL = "api/data.php";
   var SEED_URL = "data/seed.json";
   var REFRESH_MS = 60000;
   var STORE_KEY = "jud2k26:equipe";
@@ -51,7 +51,7 @@
   function loadVotes() {
     var ids = D.jogos.filter(function (g) { return g.data === state.dia; }).map(function (g) { return g.id; }).sort();
     if (!ids.length) return Promise.resolve();
-    return getJSON("/api/torcida?ids=" + encodeURIComponent(ids.join(","))).then(function (counts) {
+    return getJSON("api/torcida.php?ids=" + encodeURIComponent(ids.join(","))).then(function (counts) {
       Object.keys(counts).forEach(function (id) {
         // A cached response must never roll back a vote this visitor just cast.
         var cur = T[id], next = counts[id];
@@ -96,7 +96,7 @@
       var v2 = myVotes(); delete v2[id]; saveVotes(v2);
       T[id] = before; renderJogos(); toast(msg);
     }
-    fetch("/api/votar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: id, lado: lado }) })
+    fetch("api/votar.php", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: id, lado: lado }) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, status: r.status, b: b }; }); })
       .then(function (res) {
         if (res.ok) { T[id] = res.b; renderJogos(); toast("Voto registrado!"); return; }

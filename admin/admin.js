@@ -45,7 +45,7 @@
   // ---------- server ----------
   function request(url, opts) {
     opts = opts || {};
-    opts.headers = Object.assign({ "content-type": "application/json" }, opts.headers || {}, pw ? { authorization: "Bearer " + pw } : {});
+    opts.headers = Object.assign({ "content-type": "application/json" }, opts.headers || {}, pw ? { "x-admin-senha": pw } : {});
     opts.cache = "no-store";
     return fetch(url, opts).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (body) { return { status: r.status, ok: r.ok, body: body }; });
@@ -53,7 +53,7 @@
   }
 
   function load() {
-    return request("/api/data?admin=1").then(function (r) {
+    return request("../api/data.php?admin=1").then(function (r) {
       if (r.ok) return r.body;
       if (r.status === 404) {
         // Nothing saved yet: start from the seed; the first save creates the record.
@@ -71,7 +71,7 @@
     if (problem) { toast(problem, true); return Promise.resolve(false); }
     var rev = next._rev; delete next._rev;
     setBusy(true);
-    return request("/api/salvar", { method: "PUT", body: JSON.stringify({ rev: rev, dados: next }) }).then(function (r) {
+    return request("../api/salvar.php", { method: "POST", body: JSON.stringify({ rev: rev, dados: next }) }).then(function (r) {
       if (r.ok) { D = r.body; render(); toast(okMsg || "Salvo"); return true; }
       if (r.status === 401) { logout(r.body.erro); return false; }
       if (r.status === 409) { return load().then(function () { render(); toast(r.body.erro, true); return false; }); }
@@ -105,7 +105,7 @@
     var candidate = $("senha").value;
     $("login-erro").textContent = "";
     pw = candidate;
-    request("/api/login", { method: "POST", body: "{}" }).then(function (r) {
+    request("../api/login.php", { method: "POST", body: "{}" }).then(function (r) {
       if (!r.ok) { pw = ""; $("login-erro").textContent = r.body.erro || "Não foi possível entrar."; return; }
       session(candidate); $("senha").value = "";
       return enter();
@@ -419,7 +419,7 @@
   // ---------- start ----------
   pw = session();
   if (!pw) { showLogin(""); return; }
-  request("/api/login", { method: "POST", body: "{}" }).then(function (r) {
+  request("../api/login.php", { method: "POST", body: "{}" }).then(function (r) {
     if (!r.ok) return logout(r.status === 401 ? "" : r.body.erro);
     return enter();
   }).catch(function () { showLogin("Sem conexão com o servidor."); });
