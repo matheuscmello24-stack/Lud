@@ -5,11 +5,15 @@
   var SEED_URL = "data/seed.json";
   var REFRESH_MS = 60000;
   var STORE_KEY = "jud2k26:equipe";
+  var VOTES_KEY = "jud2k26:votos";
+  var POPUP_KEY = "jud2k26:aviso-visto";
+  var POPUP_PADRAO = "Site em fase de teste. Tabela de acompanhamento. Em caso de divergência, prevalece a súmula oficial da organização.";
   var DIAS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
   var DIAS_LONGO = ["DOMINGO", "SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"];
   var NAIPE = { F: "Feminino", M: "Masculino" };
 
   var D = null;
+  var T = {};            // torcidômetro: { gameId: { h, a } }
   var state = { dia: null, equipe: "", naipe: "", mod: "", local: "" };
 
   var $ = function (id) { return document.getElementById(id); };
@@ -35,6 +39,86 @@
   }
   function loadData(cb) {
     getJSON(API_URL).catch(function () { return getJSON(SEED_URL); }).then(cb, function () { cb(null); });
+  }
+
+  // ---------- torcidômetro ----------
+  function myVotes() {
+    try { return JSON.parse(localStorage.getItem(VOTES_KEY) || "{}") || {}; } catch (e) { return {}; }
+  }
+  function saveVotes(v) {
+    try { localStorage.setItem(VOTES_KEY, JSON.stringify(v)); } catch (e) {}
+  }
+  function loadVotes() {
+    var ids = D.jogos.filter(function (g) { return g.data === state.dia; }).map(function (g) { return g.id; }).sort();
+    if (!ids.length) return Promise.resolve();
+    return getJSON("/api/torcida?ids=" + encodeURIComponent(ids.join(","))).then(function (counts) {
+      Object.keys(counts).forEach(function (id) {
+        // A cached response must never roll back a vote this visitor just cast.
+        var cur = T[id], next = counts[id];
+        if (!cur || next.h + next.a >= cur.h + cur.a) T[id] = next;
+      });
+    }, function () {});
+  }
+  function shortName(key) { return (D.equipes[key] || { nome: key }).nome; }
+
+  function torcidaHTML(g) {
+    var c = T[g.id] || { h: 0, a: 0 };
+    var total = c.h + c.a;
+    var mine = myVotes()[g.id];
+    var closed = finished(g);
+    var open = !closed && !mine;
+    var ph = total ? Math.round((c.h / total) * 100) : 50;
+    var pa = 100 - ph;
+    // Keep each side wide enough to read and tap.
+    var wh = Math.min(85, Math.max(15, ph));
+    var info = closed ? "Votação encerrada" : mine ? "Você torce por " + esc(shortName(mine === "h" ? g.mandante : g.visitante)) : "Toque no lado do seu time";
+    if (total) info += " · " + total + (total === 1 ? " voto" : " votos");
+    function side(lado, pct, w, team) {
+      var label = total ? "<b>" + pct + "%</b>" : "";
+      var name = '<span class="t-name">' + esc(shortName(team)) + "</span>";
+      return '<button type="button" class="t-side ' + lado + (mine === lado ? " chosen" : "") + (w < 30 ? " narrow" : "") +
+        '" style="width:' + w + '%" data-lado="' + lado + '"' + (open ? "" : " disabled") +
+        ' aria-label="Torcer por ' + esc(shortName(team)) + (total ? ", " + pct + "% dos votos" : "") + '">' +
+        (lado === "h" ? label + name : name + label) + "</button>";
+    }
+    return '<div class="torcida' + (open ? " open" : "") + '" data-id="' + esc(g.id) + '">' +
+      '<div class="t-head"><span class="t-title">Torcidômetro</span><span class="t-info">' + info + "</span></div>" +
+      '<div class="t-bar">' + side("h", ph, wh, g.mandante) + side("a", pa, 100 - wh, g.visitante) + "</div></div>";
+  }
+
+  function vote(id, lado) {
+    if (myVotes()[id]) return;
+    var before = T[id] || { h: 0, a: 0 };
+    var v = myVotes(); v[id] = lado; saveVotes(v);
+    T[id] = { h: before.h + (lado === "h" ? 1 : 0), a: before.a + (lado === "a" ? 1 : 0) };
+    renderJogos();
+    function undo(msg) {
+      var v2 = myVotes(); delete v2[id]; saveVotes(v2);
+      T[id] = before; renderJogos(); toast(msg);
+    }
+    fetch("/api/votar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: id, lado: lado }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, status: r.status, b: b }; }); })
+      .then(function (res) {
+        if (res.ok) { T[id] = res.b; renderJogos(); toast("Voto registrado!"); return; }
+        if (res.status === 409) { T[id] = before; renderJogos(); toast(res.b.erro || "Votação encerrada."); return; }
+        undo(res.b.erro || "Não foi possível registrar o voto. Tente de novo.");
+      }, function () { undo("Sem conexão. O voto não foi registrado."); });
+  }
+
+  // ---------- aviso inicial ----------
+  function showPopup() {
+    var seen = false;
+    try { seen = sessionStorage.getItem(POPUP_KEY) === "1"; } catch (e) {}
+    var dlg = $("popup");
+    if (seen || !dlg) return;
+    $("popup-texto").textContent = (D && D.evento.popup) || POPUP_PADRAO;
+    if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
+    $("popup-ok").focus();
+  }
+  function closePopup() {
+    try { sessionStorage.setItem(POPUP_KEY, "1"); } catch (e) {}
+    var dlg = $("popup");
+    if (typeof dlg.close === "function" && dlg.open) dlg.close(); else dlg.removeAttribute("open");
   }
 
   // ---------- URL state ----------
@@ -140,6 +224,7 @@
         sa + teamHTML(g.visitante, ac) +
         '<div class="mod">' + esc(mod.curto) + "</div>" +
       "</div>" +
+      (g.status === "adiado" || (finished(g) && !((T[g.id] || {}).h + (T[g.id] || {}).a)) ? "" : torcidaHTML(g)) +
       (g.obs ? '<p class="obs">' + esc(g.obs) + "</p>" : "") +
       "</article>";
   }
@@ -184,7 +269,14 @@
   function bind() {
     $("days").addEventListener("click", function (e) {
       var b = e.target.closest("button"); if (!b) return; state.dia = b.dataset.v; render();
+      loadVotes().then(renderJogos);
     });
+    $("view-jogos").addEventListener("click", function (e) {
+      var b = e.target.closest(".torcida.open .t-side"); if (!b) return;
+      vote(b.closest(".torcida").dataset.id, b.dataset.lado);
+    });
+    $("popup-ok").addEventListener("click", closePopup);
+    $("popup").addEventListener("cancel", closePopup);
     $("f-equipe").addEventListener("click", function (e) {
       var b = e.target.closest("button"); if (!b) return;
       state.equipe = b.dataset.v; store(STORE_KEY, state.equipe); render();
@@ -208,14 +300,15 @@
 
   function refresh() {
     if (document.hidden) return;
-    loadData(function (d) { if (d) { D = d; render(); } });
+    loadData(function (d) { if (d) { D = d; render(); loadVotes().then(renderJogos); } });
   }
 
   readHash();
   if (!state.equipe) state.equipe = store(STORE_KEY) || "";
   loadData(function (d) {
     if (!d) { $("view-jogos").innerHTML = '<div class="empty">Não foi possível carregar a tabela. Tente recarregar a página.</div>'; return; }
-    D = d; bind(); render();
+    D = d; bind(); render(); showPopup();
+    loadVotes().then(renderJogos);
     setInterval(refresh, REFRESH_MS);
     document.addEventListener("visibilitychange", refresh);
   });

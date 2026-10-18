@@ -374,11 +374,12 @@
     if (document.activeElement && document.activeElement.closest("#evento-form")) return;
     $("ev-nome").value = D.evento.nome || "";
     $("ev-aviso").value = D.evento.aviso || "";
+    $("ev-popup").value = D.evento.popup || "";
   }
   $("evento-form").addEventListener("submit", function (e) {
     e.preventDefault();
-    var nome = $("ev-nome").value.trim(), aviso = $("ev-aviso").value.trim();
-    save(function (d) { d.evento.nome = nome; d.evento.aviso = aviso; }, "Dados do evento salvos");
+    var nome = $("ev-nome").value.trim(), aviso = $("ev-aviso").value.trim(), popup = $("ev-popup").value.trim();
+    save(function (d) { d.evento.nome = nome; d.evento.aviso = aviso; if (popup) d.evento.popup = popup; else delete d.evento.popup; }, "Dados do evento salvos");
   });
   $("backup").addEventListener("click", function () {
     var data = clone(D); delete data._rev;

@@ -19,7 +19,7 @@ const ctx = { edgeURL: `http://localhost:${BLOBS_PORT}`, uncachedEdgeURL: `http:
 process.env.NETLIFY_BLOBS_CONTEXT = Buffer.from(JSON.stringify(ctx)).toString("base64");
 
 const routes = [];
-for (const name of ["data", "admin"]) {
+for (const name of ["data", "admin", "torcida", "votar"]) {
   const mod = await import(`../netlify/functions/${name}.mjs`);
   for (const p of [].concat(mod.config.path)) routes.push([p, mod.default]);
 }

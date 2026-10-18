@@ -5,6 +5,20 @@ import { getStore } from "@netlify/blobs";
 
 export const KEY = "dados";
 export const dataStore = () => getStore({ name: "jud2k26", consistency: "strong" });
+export const votesStore = () => getStore({ name: "jud2k26-torcida", consistency: "strong" });
+// Each vote is its own entry (v/<gameId>/<lado>-<unique>), so simultaneous votes never overwrite each other;
+// the tally counts entries by listing the game's prefix.
+export const votePrefix = (id) => `v/${id}/`;
+export async function tally(store, id) {
+  const counts = { h: 0, a: 0 };
+  for await (const page of store.list({ prefix: votePrefix(id), paginate: true })) {
+    for (const { key } of page.blobs) {
+      const lado = key.slice(votePrefix(id).length, votePrefix(id).length + 1);
+      if (lado === "h" || lado === "a") counts[lado]++;
+    }
+  }
+  return counts;
+}
 const STATUS = ["agendado", "encerrado", "wo", "adiado"];
 const NAIPES = ["F", "M"];
 
@@ -23,7 +37,7 @@ export function authorized(req) {
   return timingSafeEqual(a, b);
 }
 
-const isKey = (s) => typeof s === "string" && /^[A-Za-z0-9_-]{1,24}$/.test(s);
+export const isKey = (s) => typeof s === "string" && /^[A-Za-z0-9_-]{1,24}$/.test(s);
 const isText = (s, max) => typeof s === "string" && s.trim().length > 0 && s.length <= max;
 const optText = (s, max) => s === undefined || s === "" || (typeof s === "string" && s.length <= max);
 
@@ -31,7 +45,7 @@ const optText = (s, max) => s === undefined || s === "" || (typeof s === "string
 export function validate(d) {
   if (!d || typeof d !== "object") return "Documento inválido.";
   delete d._rev;
-  if (!d.evento || !optText(d.evento.aviso, 400) || !optText(d.evento.nome, 80)) return "Dados do evento inválidos.";
+  if (!d.evento || !optText(d.evento.aviso, 400) || !optText(d.evento.popup, 400) || !optText(d.evento.nome, 80)) return "Dados do evento inválidos.";
   for (const [name, col] of [["modalidades", d.modalidades], ["locais", d.locais], ["equipes", d.equipes]]) {
     if (!col || typeof col !== "object" || Array.isArray(col)) return `Lista de ${name} inválida.`;
     for (const [k, v] of Object.entries(col)) {

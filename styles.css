@@ -94,7 +94,6 @@ img { max-width: 100%; }
 .venue-head h2 { font-size: clamp(30px, 8vw, 46px); }
 .venue-head span { font-size: clamp(20px, 5vw, 34px); }
 
-.game { margin-bottom: 9px; }
 .bar {
   --h: 54px; --cut: 18px; --scw: 24px; --bar: var(--pink);
   display: grid; grid-template-columns: 40px minmax(0, 1fr) var(--scw) auto var(--scw) minmax(0, 1fr); align-items: center; column-gap: 4px;
@@ -151,6 +150,53 @@ img { max-width: 100%; }
   .tag { font-size: 9px; }
 }
 
+/* ---------- Torcidômetro ---------- */
+.game { margin-bottom: 14px; }
+.torcida { margin-top: 5px; margin-right: 18px; }
+.t-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.t-title { font-family: var(--display); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+.t-info { font-size: 10px; font-weight: 700; text-align: right; opacity: .9; }
+.t-bar { display: flex; height: 30px; border-radius: 999px; overflow: hidden; background: var(--blue-ink); box-shadow: 0 0 0 2px rgba(255,255,255,.85); }
+.t-side {
+  display: flex; align-items: center; gap: 6px; min-width: 0; border: 0; padding: 0 12px;
+  font-family: var(--names); font-weight: 800; font-size: 11px; text-transform: uppercase; white-space: nowrap;
+  transition: width .5s ease;
+}
+.t-side.h { background: var(--white); color: var(--blue); justify-content: flex-start; }
+.t-side.a { background: var(--blue-ink); color: var(--white); justify-content: flex-end; }
+.t-side b { font-family: var(--display); font-weight: 400; font-size: 16px; }
+.t-name { overflow: hidden; text-overflow: ellipsis; }
+.t-side.narrow .t-name { display: none; }
+.t-side:disabled { cursor: default; }
+.t-side.chosen .t-name::after { content: " ✓"; }
+.torcida.open .t-side:hover, .torcida.open .t-side:focus-visible { filter: brightness(1.08); }
+.torcida.open .t-side:focus-visible { outline: 3px solid var(--yellow); outline-offset: -3px; }
+.torcida.open .t-bar { animation: nudge 2.4s ease-in-out 1s 2; }
+@keyframes nudge { 50% { box-shadow: 0 0 0 3px var(--yellow); } }
+
+@media (min-width: 720px) {
+  .torcida { margin-left: 122px; margin-right: 26px; }
+  .t-bar { height: 34px; }
+  .t-side { font-size: 12px; }
+  .t-title { font-size: 15px; }
+  .t-info { font-size: 11px; }
+}
+
+/* ---------- Pop-up de aviso ---------- */
+.popup {
+  width: min(420px, calc(100% - 32px)); border: 0; padding: 28px 24px 22px; border-radius: 18px; text-align: center;
+  background: var(--blue); color: var(--white); box-shadow: 0 20px 60px rgba(0, 20, 60, .45);
+}
+.popup::backdrop { background: rgba(0, 25, 70, .7); }
+.popup-logo { width: 84px; height: auto; }
+.popup h2 { margin: 14px 0 8px; font-family: var(--display); font-weight: 400; font-size: 28px; text-transform: uppercase; letter-spacing: .02em; }
+.popup p { margin: 0 0 20px; font-size: 14px; font-weight: 600; line-height: 1.5; font-stretch: 100%; }
+.popup button {
+  width: 100%; min-height: 48px; border: 0; border-radius: 12px; background: var(--yellow); color: var(--ink);
+  font-family: var(--display); font-size: 20px; text-transform: uppercase; letter-spacing: .04em;
+}
+.popup button:focus-visible { outline: 3px solid var(--white); outline-offset: 2px; }
+
 /* ---------- Misc ---------- */
 .aviso { margin: 28px 0 0; font-size: 11px; font-weight: 600; text-align: center; opacity: .85; line-height: 1.5; }
 .share {
@@ -181,4 +227,4 @@ img { max-width: 100%; }
 }
 .toast.show { opacity: 1; translate: -50% 0; }
 
-@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .toast, .t-side { transition: none; } .torcida.open .t-bar { animation: none; } }

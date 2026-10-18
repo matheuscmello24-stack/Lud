@@ -3,7 +3,8 @@
     "nome": "JUD 2K26",
     "subtitulo": "Tabela de jogos e resultados",
     "atualizadoEm": "2026-10-17T07:00:00-03:00",
-    "aviso": "Tabela de acompanhamento. Em caso de divergência, prevalece a súmula oficial da organização."
+    "aviso": "Tabela de acompanhamento. Em caso de divergência, prevalece a súmula oficial da organização.",
+    "popup": "Site em fase de teste. Tabela de acompanhamento. Em caso de divergência, prevalece a súmula oficial da organização."
   },
   "modalidades": {
     "HAND": {
