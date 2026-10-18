@@ -36,6 +36,7 @@ Para o site em um subdomínio (ex.: `jogos.seudominio.com.br`), crie o subdomín
 - **Novo dia**: toque em *+ Novo dia* (ao lado dos dias). O admin sugere o dia seguinte ao último cadastrado; ajuste a data se precisar e cadastre os jogos. Também basta escolher qualquer data no campo *Data* do formulário.
 - **Importar grade de um dia**: na aba Jogos, abra *Importar grade*, escolha data e local e cole uma linha por jogo, no formato `08:00 BAIANA x UNIFACS HAND F` (horário, equipe, x, equipe, sigla da modalidade, naipe F ou M). Toque em *Conferir*: o admin mostra cada jogo entendido e aponta erros (equipe ou modalidade não cadastrada etc.). Sem erros, *Importar* grava todos de uma vez. Faça uma importação por local.
 - **Cadastros**: equipes (com complemento em itálico, ex.: UNIFACS *SSA*), locais e modalidades (sigla da barra e opção de parciais por sets). Um cadastro em uso por algum jogo não pode ser excluído.
+- **Novo local**: na aba Jogos, toque em *+ Novo local* abaixo do campo Local (no formulário ou na importação de grade), digite o nome e toque em *Criar*; o local já fica selecionado. Também dá para cadastrar e renomear em Cadastros → Locais. No site público, o filtro de locais mostra só os locais com jogos no dia escolhido.
 - **Evento**: nome, aviso do rodapé, texto do pop-up de abertura e **Baixar backup** (JSON com tudo). Faça backup ao fim de cada dia.
 
 Para trocar a senha, edite `api/config.php` no Gerenciador de Arquivos. Quem estiver logado precisará entrar de novo.

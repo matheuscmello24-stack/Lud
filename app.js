@@ -186,7 +186,11 @@
     $("f-mod").innerHTML = chip("Todas", "", state.mod) +
       Object.keys(D.modalidades).map(function (k) { return chip(esc(D.modalidades[k].nome), k, state.mod); }).join("");
 
-    var locais = Object.keys(D.locais || {});
+    // Only venues with games on the selected day; a stale venue filter is cleared.
+    var locais = Object.keys(D.locais || {}).filter(function (k) {
+      return D.jogos.some(function (g) { return g.data === state.dia && g.local === k; });
+    });
+    if (state.local && locais.indexOf(state.local) < 0) state.local = "";
     $("f-local").innerHTML = locais.length > 1 ? chip("Todos os locais", "", state.local) +
       locais.map(function (k) { return chip(esc(D.locais[k].nome), k, state.local); }).join("") : "";
     $("f-local").hidden = locais.length < 2;

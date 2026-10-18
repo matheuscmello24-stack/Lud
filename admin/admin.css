@@ -109,6 +109,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .row .d small { display: block; color: var(--ink-2); }
 .row .b { display: flex; gap: 6px; }
 
+/* Inline "new venue" */
+.link-btn { background: none; border: 0; padding: 6px 0 0; color: var(--blue); font-weight: 600; font-size: 13px; cursor: pointer; }
+.novo-local { display: flex; gap: 6px; margin-top: 6px; }
+.novo-local input { flex: 1; min-width: 0; }
+
 /* Bulk import */
 .lote summary { cursor: pointer; list-style: none; }
 .lote summary::-webkit-details-marker { display: none; }

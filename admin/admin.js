@@ -303,6 +303,33 @@
     ui.dia = v; render();
   });
 
+  // ---------- new venue straight from the game forms ----------
+  document.querySelector("[data-panel=jogos]").addEventListener("click", function (e) {
+    var abrir = e.target.closest("[data-novo-local]");
+    if (abrir) {
+      var box = document.querySelector('.novo-local[data-para="' + abrir.dataset.novoLocal + '"]');
+      box.hidden = !box.hidden;
+      if (!box.hidden) box.querySelector("input").focus();
+      return;
+    }
+    var criar = e.target.closest("[data-criar-local]");
+    if (!criar) return;
+    var caixa = criar.closest(".novo-local"), input = caixa.querySelector("input"), nome = input.value.trim();
+    if (!nome) { toast("Digite o nome do local.", true); input.focus(); return; }
+    var existente = Object.keys(D.locais).find(function (k) { return norm(D.locais[k].nome) === norm(nome); });
+    var select = $(caixa.dataset.para);
+    if (existente) { select.value = existente; caixa.hidden = true; input.value = ""; toast("Esse local já existe e foi selecionado."); return; }
+    var chave = keyFrom(nome, D.locais);
+    save(function (d) { d.locais[chave] = { nome: nome }; }, "Local cadastrado: " + nome).then(function (ok) {
+      if (!ok) return;
+      input.value = ""; caixa.hidden = true;
+      $(caixa.dataset.para).value = chave;
+    });
+  });
+  document.querySelector("[data-panel=jogos]").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && e.target.closest(".novo-local")) { e.preventDefault(); e.target.closest(".novo-local").querySelector("[data-criar-local]").click(); }
+  });
+
   // ---------- bulk import ----------
   function norm(s) {
     return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/\s+/g, " ").trim();

@@ -63,7 +63,7 @@
           <div class="grid">
             <div><label for="j-data">Data</label><input type="date" id="j-data" required></div>
             <div><label for="j-hora">Horário</label><input type="time" id="j-hora" required step="300"></div>
-            <div><label for="j-local">Local</label><select id="j-local" required></select></div>
+            <div><label for="j-local">Local</label><select id="j-local" required></select><button type="button" class="link-btn" data-novo-local="j-local">+ Novo local</button><span class="novo-local" data-para="j-local" hidden><input maxlength="40" placeholder="Nome do local (ex.: Arena UNIFACS)" aria-label="Nome do novo local"><button type="button" class="btn sm primary" data-criar-local>Criar</button></span></div>
             <div><label for="j-mod">Modalidade</label><select id="j-mod" required></select></div>
             <div class="span2">
               <span class="label">Naipe</span>
@@ -89,7 +89,7 @@
 17:00 UNIFACS x BÁRBAROS FUT M</pre>
           <div class="grid">
             <div><label for="lote-data">Data</label><input type="date" id="lote-data"></div>
-            <div><label for="lote-local">Local</label><select id="lote-local"></select></div>
+            <div><label for="lote-local">Local</label><select id="lote-local"></select><button type="button" class="link-btn" data-novo-local="lote-local">+ Novo local</button><span class="novo-local" data-para="lote-local" hidden><input maxlength="40" placeholder="Nome do local (ex.: Arena UNIFACS)" aria-label="Nome do novo local"><button type="button" class="btn sm primary" data-criar-local>Criar</button></span></div>
           </div>
           <label for="lote-texto">Jogos</label>
           <textarea id="lote-texto" rows="8" spellcheck="false" placeholder="08:00 BAIANA x UNIFACS HAND F"></textarea>
