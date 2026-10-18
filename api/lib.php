@@ -15,7 +15,9 @@ define('SEED', dirname(__DIR__) . '/data/seed.json');
 define('DADOS', STORAGE . '/dados.json');
 
 header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('X-LiteSpeed-Cache-Control: no-cache');
 header('X-Content-Type-Options: nosniff');
 
 function responder($body, int $status = 200): void {
@@ -71,30 +73,44 @@ function senha_enviada(): string {
 }
 
 function exigir_admin(): void {
-    limitar('login', LIMITE_LOGIN_POR_MINUTO);
+    bloqueado('senha-errada', LIMITE_LOGIN_POR_MINUTO);
     if (ADMIN_PASSWORD === '' || ADMIN_PASSWORD === 'TROQUE-ESTA-SENHA') {
         responder(['erro' => 'Defina a senha do admin no arquivo api/config.php antes de usar o painel.'], 500);
     }
     $dada = senha_enviada();
     if ($dada === '' || !hash_equals(hash('sha256', ADMIN_PASSWORD), hash('sha256', $dada))) {
+        contar('senha-errada');
         responder(['erro' => 'Senha incorreta ou sessão expirada. Entre novamente.'], 401);
     }
 }
 
-// Simple fixed-window rate limit per IP, stored in storage/limites.
-function limitar(string $nome, int $max): void {
+// Fixed one-minute windows per IP, stored in storage/limites.
+function arquivo_limite(string $nome): string {
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'desconhecido';
-    $arq = pasta('limites') . '/' . $nome . '-' . substr(hash('sha256', $ip), 0, 20) . '.json';
+    return pasta('limites') . '/' . $nome . '-' . substr(hash('sha256', $ip), 0, 20) . '.json';
+}
+// Adds one to this IP's counter for the current minute and returns the new total.
+function contar(string $nome): int {
     $janela = intdiv(time(), 60);
-    $fp = fopen($arq, 'c+');
-    if (!$fp) return;
+    $fp = fopen(arquivo_limite($nome), 'c+');
+    if (!$fp) return 0;
     flock($fp, LOCK_EX);
     $d = json_decode(stream_get_contents($fp) ?: '', true) ?: [];
     $n = (($d['j'] ?? 0) === $janela) ? ($d['n'] ?? 0) + 1 : 1;
     ftruncate($fp, 0); rewind($fp);
     fwrite($fp, json_encode(['j' => $janela, 'n' => $n]));
     flock($fp, LOCK_UN); fclose($fp);
-    if ($n > $max) responder(['erro' => 'Muitas tentativas em pouco tempo. Aguarde um minuto e tente de novo.'], 429);
+    return $n;
+}
+function bloqueado(string $nome, int $max): void {
+    $arq = arquivo_limite($nome);
+    $d = is_file($arq) ? (json_decode((string) file_get_contents($arq), true) ?: []) : [];
+    if (($d['j'] ?? 0) === intdiv(time(), 60) && ($d['n'] ?? 0) >= $max) {
+        responder(['erro' => 'Muitas tentativas de senha errada. Aguarde um minuto e tente de novo.'], 429);
+    }
+}
+function limitar(string $nome, int $max): void {
+    if (contar($nome) > $max) responder(['erro' => 'Muitas tentativas em pouco tempo. Aguarde um minuto e tente de novo.'], 429);
 }
 
 function e_chave($s): bool { return is_string($s) && preg_match('/^[A-Za-z0-9_-]{1,24}$/', $s) === 1; }

@@ -109,6 +109,21 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .row .d small { display: block; color: var(--ink-2); }
 .row .b { display: flex; gap: 6px; }
 
+/* Bulk import */
+.lote summary { cursor: pointer; list-style: none; }
+.lote summary::-webkit-details-marker { display: none; }
+.lote summary h2 { display: inline; margin: 0; }
+.lote summary::after { content: " ▸"; color: var(--ink-2); }
+.lote[open] summary::after { content: " ▾"; }
+.lote[open] summary { margin-bottom: 10px; }
+.exemplo { background: #f4f7fc; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; overflow-x: auto; margin: 0 0 6px; }
+code { font-size: 12.5px; background: #f4f7fc; padding: 1px 4px; border-radius: 4px; }
+textarea#lote-texto { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px; }
+.lote-lista { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13px; }
+.lote-lista li { padding: 6px 10px; border-radius: 8px; background: #e3f5ea; }
+.lote-lista li.erro { background: #fde7ec; color: var(--err); font-weight: 600; }
+.chip.novo { border-style: dashed; color: var(--blue); }
+
 /* Registers */
 .cad { display: grid; gap: 8px; margin-bottom: 12px; }
 .cad-row, .cad-add { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }

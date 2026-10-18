@@ -9,7 +9,8 @@
   var D = null;          // current data, including _rev (revision) from the server
   var pw = "";
   var busy = false;
-  var ui = { tab: "resultados", dia: "", local: "", editing: "" };
+  var ui = { tab: "resultados", dia: "", local: "", editing: "", novoDia: "" };
+  var lote = [];         // games parsed from the bulk-import box, ready to save
 
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) {
@@ -53,11 +54,11 @@
   }
 
   function load() {
-    return request("../api/data.php?admin=1").then(function (r) {
+    return request("../api/data.php?admin=1&t=" + Date.now()).then(function (r) {
       if (r.ok) return r.body;
       if (r.status === 404) {
         // Nothing saved yet: start from the seed; the first save creates the record.
-        return fetch("../data/seed.json", { cache: "no-store" }).then(function (x) { return x.json(); }).then(function (d) { d._rev = 0; return d; });
+        return fetch("../data/seed.json?t=" + Date.now(), { cache: "no-store" }).then(function (x) { return x.json(); }).then(function (d) { d._rev = 0; return d; });
       }
       throw new Error(r.body.erro || "Não foi possível carregar os dados (erro " + r.status + ").");
     }).then(function (d) { D = d; });
@@ -114,7 +115,16 @@
   $("sair").addEventListener("click", function () { logout(""); });
 
   // ---------- filters ----------
-  function days() { return Array.from(new Set(D.jogos.map(function (g) { return g.data; }))).sort(); }
+  // Days with games, plus a new day the admin is preparing (it has no games yet).
+  function days() {
+    var ds = D.jogos.map(function (g) { return g.data; });
+    if (ui.novoDia) ds.push(ui.novoDia);
+    return Array.from(new Set(ds)).sort();
+  }
+  function nextDay(iso) {
+    var p = iso.split("-"), d = new Date(+p[0], +p[1] - 1, +p[2] + 1);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
   function renderFilters() {
     var ds = days();
     if (!ui.dia || ds.indexOf(ui.dia) < 0) {
@@ -123,7 +133,7 @@
     }
     $("dias").innerHTML = ds.map(function (d) {
       return '<button type="button" class="chip" data-v="' + d + '" aria-pressed="' + (d === ui.dia) + '">' + dayLabel(d) + "</button>";
-    }).join("") || '<span class="muted small">Nenhum jogo cadastrado ainda.</span>';
+    }).join("") + '<button type="button" class="chip novo" data-novo="1">+ Novo dia</button>';
     var ls = Object.keys(D.locais);
     $("locais").innerHTML = ls.length > 1 ? ['<button type="button" class="chip" data-v="" aria-pressed="' + (!ui.local) + '">Todos os locais</button>']
       .concat(ls.map(function (k) { return '<button type="button" class="chip" data-v="' + k + '" aria-pressed="' + (k === ui.local) + '">' + esc(D.locais[k].nome) + "</button>"; })).join("") : "";
@@ -236,6 +246,9 @@
       var keep = { local: $("j-local").value, modalidade: $("j-mod").value, mandante: $("j-mandante").value, visitante: $("j-visitante").value };
       fillFormSelects(keep);
     }
+    var keepLocal = $("lote-local").value;
+    $("lote-local").innerHTML = options(D.locais, keepLocal || ui.local);
+    if (!$("lote-data").value) $("lote-data").value = ui.dia || todayISO();
     var list = dayGames(true);
     $("jogos-titulo").textContent = ui.dia ? "Jogos de " + dayLabel(ui.dia) + " (" + list.length + ")" : "";
     $("lista-jogos").innerHTML = list.length ? list.map(function (g) {
@@ -283,6 +296,88 @@
     });
   });
   $("jogo-cancelar").addEventListener("click", function () { resetForm(); render(); });
+  // Choosing a date with no games yet makes it the selected day, so its list (empty) is shown.
+  $("j-data").addEventListener("change", function () {
+    var v = $("j-data").value; if (!v) return;
+    if (!D.jogos.some(function (g) { return g.data === v; })) ui.novoDia = v;
+    ui.dia = v; render();
+  });
+
+  // ---------- bulk import ----------
+  function norm(s) {
+    return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/\s+/g, " ").trim();
+  }
+  function findTeam(text) {
+    var t = norm(text);
+    return Object.keys(D.equipes).find(function (k) {
+      var e = D.equipes[k];
+      return norm(e.nome) === t || norm(e.nome + " " + (e.destaque || "")) === t || norm(k) === t;
+    });
+  }
+  function findMod(text) {
+    var t = norm(text);
+    return Object.keys(D.modalidades).find(function (k) {
+      var m = D.modalidades[k];
+      return norm(m.curto) === t || norm(m.nome) === t || norm(k) === t;
+    });
+  }
+  var NAIPE_TXT = { F: "F", FEM: "F", FEMININO: "F", FEMININA: "F", M: "M", MASC: "M", MASCULINO: "M", MASCULINA: "M" };
+  function parseLine(line, n) {
+    var m = line.match(/^(\d{1,2})\s*[:hH]\s*(\d{2})\s+(.+?)\s+(?:X|x|×|VS|vs|Vs)\s+(.+)$/);
+    if (!m) return { erro: "Linha " + n + ": não entendi. Use HORÁRIO EQUIPE x EQUIPE MODALIDADE NAIPE." };
+    var hora = String(m[1]).padStart(2, "0") + ":" + m[2];
+    var rest = m[4].trim().split(/\s+/);
+    if (rest.length < 3) return { erro: "Linha " + n + ": faltou a modalidade ou o naipe." };
+    var naipe = NAIPE_TXT[norm(rest.pop())];
+    var mod = findMod(rest.pop());
+    var t1 = findTeam(m[3]), t2 = findTeam(rest.join(" "));
+    var faltas = [];
+    if (+m[1] > 23 || +m[2] > 59) faltas.push("horário inválido");
+    if (!t1) faltas.push('equipe "' + m[3].trim() + '" não cadastrada');
+    if (!t2) faltas.push('equipe "' + rest.join(" ") + '" não cadastrada');
+    if (!mod) faltas.push("modalidade não cadastrada");
+    if (!naipe) faltas.push("naipe deve ser F ou M");
+    if (t1 && t1 === t2) faltas.push("equipes iguais");
+    if (faltas.length) return { erro: "Linha " + n + ": " + faltas.join("; ") + "." };
+    return { jogo: { hora: hora, modalidade: mod, naipe: naipe, mandante: t1, visitante: t2 } };
+  }
+  function conferirLote() {
+    var data = $("lote-data").value, local = $("lote-local").value;
+    var linhas = $("lote-texto").value.split(/\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+    var out = [], erros = 0;
+    lote = [];
+    if (!data) { out.push('<li class="erro">Escolha a data.</li>'); erros++; }
+    if (!linhas.length) { out.push('<li class="erro">Cole ao menos um jogo.</li>'); erros++; }
+    linhas.forEach(function (l, i) {
+      var r = parseLine(l, i + 1);
+      if (r.erro) { erros++; out.push('<li class="erro">' + esc(r.erro) + "</li>"); return; }
+      var g = r.jogo;
+      var dup = D.jogos.some(function (x) { return x.data === data && x.hora === g.hora && x.local === local; }) ||
+        lote.some(function (x) { return x.hora === g.hora; });
+      lote.push(g);
+      out.push("<li>" + esc(g.hora + " · " + teamName(g.mandante) + " × " + teamName(g.visitante) + " · " + D.modalidades[g.modalidade].nome + " " + NAIPE[g.naipe]) +
+        (dup ? " <b>(já existe jogo nesse horário e local)</b>" : "") + "</li>");
+    });
+    if (erros) lote = [];
+    $("lote-resultado").innerHTML = '<ul class="lote-lista">' + out.join("") + "</ul>";
+    $("lote-importar").disabled = !lote.length;
+    $("lote-importar").textContent = lote.length ? "Importar " + lote.length + (lote.length > 1 ? " jogos" : " jogo") : "Importar";
+  }
+  $("lote-conferir").addEventListener("click", conferirLote);
+  $("lote-texto").addEventListener("input", function () { lote = []; $("lote-importar").disabled = true; $("lote-importar").textContent = "Importar"; });
+  $("lote-importar").addEventListener("click", function () {
+    if (!lote.length) return;
+    var data = $("lote-data").value, local = $("lote-local").value, n = lote.length;
+    var novos = lote.map(function (g) { return Object.assign({ id: newId("j"), data: data, local: local, status: "agendado" }, g); });
+    save(function (d) { novos.forEach(function (g) { d.jogos.push(g); }); }, n + (n > 1 ? " jogos importados" : " jogo importado") + " em " + dayLabel(data)).then(function (ok) {
+      if (!ok) return;
+      lote = []; $("lote-texto").value = ""; $("lote-resultado").innerHTML = "";
+      $("lote-importar").disabled = true; $("lote-importar").textContent = "Importar";
+      ui.dia = data; ui.novoDia = "";
+      if (!ui.editing) $("j-data").value = data;
+      render();
+    });
+  });
 
   $("lista-jogos").addEventListener("click", function (e) {
     var b = e.target.closest("button[data-acao]"); if (!b) return;
@@ -398,7 +493,19 @@
   });
   $("dias").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.novo) {
+      // Start a new day: suggest the day after the last one and open the game form on it.
+      var ds = days(), sug = ds.length ? nextDay(ds[ds.length - 1]) : todayISO();
+      ui.novoDia = sug; ui.dia = sug; ui.tab = "jogos";
+      if (ui.editing) resetForm();
+      $("j-data").value = sug; $("lote-data").value = sug;
+      render();
+      $("j-data").focus();
+      toast("Novo dia " + dayLabel(sug) + ". Ajuste a data se precisar e cadastre os jogos.");
+      return;
+    }
     ui.dia = b.dataset.v;
+    $("lote-data").value = ui.dia;
     if (!ui.editing) $("j-data").value = ui.dia;
     render();
   });

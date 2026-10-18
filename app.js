@@ -35,6 +35,7 @@
 
   // ---------- data loading: the admin's saved data, or the seed file until something is saved ----------
   function getJSON(url) {
+    url += (url.indexOf("?") < 0 ? "?" : "&") + "t=" + Date.now();
     return fetch(url, { cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); });
   }
   function loadData(cb) {

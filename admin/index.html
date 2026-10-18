@@ -81,6 +81,25 @@
           </div>
           <p class="muted small" id="jogo-dica">Depois de adicionar, o formulário mantém data, local e modalidade e avança o horário em 1 hora, para agilizar o cadastro da grade.</p>
         </form>
+        <details class="card lote" id="lote">
+          <summary><h2>Importar grade de um dia (colar texto)</h2></summary>
+          <p class="muted small">Uma linha por jogo, no formato <code>HORÁRIO EQUIPE x EQUIPE MODALIDADE NAIPE</code>. Use os nomes e siglas da aba Cadastros. Naipe: F ou M. Exemplo:</p>
+          <pre class="exemplo">08:00 BAIANA x UNIFACS HAND F
+09:00 UCSAL x BAIANA HAND M
+17:00 UNIFACS x BÁRBAROS FUT M</pre>
+          <div class="grid">
+            <div><label for="lote-data">Data</label><input type="date" id="lote-data"></div>
+            <div><label for="lote-local">Local</label><select id="lote-local"></select></div>
+          </div>
+          <label for="lote-texto">Jogos</label>
+          <textarea id="lote-texto" rows="8" spellcheck="false" placeholder="08:00 BAIANA x UNIFACS HAND F"></textarea>
+          <div class="actions">
+            <button type="button" class="btn" id="lote-conferir">Conferir</button>
+            <button type="button" class="btn primary" id="lote-importar" disabled>Importar</button>
+          </div>
+          <div id="lote-resultado"></div>
+        </details>
+
         <h2 class="list-title" id="jogos-titulo"></h2>
         <div id="lista-jogos"></div>
       </div>

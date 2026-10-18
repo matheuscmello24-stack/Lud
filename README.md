@@ -33,6 +33,8 @@ Para o site em um subdomínio (ex.: `jogos.seudominio.com.br`), crie o subdomín
 
 - **Resultados**: escolha o dia (e o local, se quiser), digite o placar e toque em *Salvar resultado*. Ao digitar o placar, a situação muda sozinha para *Encerrado*. Para W.O., escolha *W.O.* e informe o placar do regulamento. *Limpar resultado* volta o jogo para *Agendado*.
 - **Jogos**: cadastre, edite ou exclua jogos. Depois de adicionar, o formulário mantém data, local, modalidade e naipe e avança 1 hora. Excluir pede um segundo toque de confirmação.
+- **Novo dia**: toque em *+ Novo dia* (ao lado dos dias). O admin sugere o dia seguinte ao último cadastrado; ajuste a data se precisar e cadastre os jogos. Também basta escolher qualquer data no campo *Data* do formulário.
+- **Importar grade de um dia**: na aba Jogos, abra *Importar grade*, escolha data e local e cole uma linha por jogo, no formato `08:00 BAIANA x UNIFACS HAND F` (horário, equipe, x, equipe, sigla da modalidade, naipe F ou M). Toque em *Conferir*: o admin mostra cada jogo entendido e aponta erros (equipe ou modalidade não cadastrada etc.). Sem erros, *Importar* grava todos de uma vez. Faça uma importação por local.
 - **Cadastros**: equipes (com complemento em itálico, ex.: UNIFACS *SSA*), locais e modalidades (sigla da barra e opção de parciais por sets). Um cadastro em uso por algum jogo não pode ser excluído.
 - **Evento**: nome, aviso do rodapé, texto do pop-up de abertura e **Baixar backup** (JSON com tudo). Faça backup ao fim de cada dia.
 
