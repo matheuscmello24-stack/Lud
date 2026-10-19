@@ -144,7 +144,13 @@
     return t.nome + (t.destaque ? " " + t.destaque : "");
   }
   function hasScore(g) { return Array.isArray(g.placar) && g.placar.length === 2 && g.placar[0] != null && g.placar[1] != null; }
-  function finished(g) { return (g.status === "encerrado" || g.status === "wo") && hasScore(g); }
+  // W.O. records who showed up ("vencedor": "h" or "a"); older W.O. games may still carry a score instead.
+  function woWinner(g) {
+    if (g.status !== "wo") return "";
+    if (g.vencedor === "h" || g.vencedor === "a") return g.vencedor;
+    return hasScore(g) ? (g.placar[0] >= g.placar[1] ? "h" : "a") : "";
+  }
+  function finished(g) { return (g.status === "encerrado" && hasScore(g)) || !!woWinner(g); }
 
   function filtered(ignoreDay) {
     return D.jogos.filter(function (g) {
@@ -201,18 +207,22 @@
     var mod = D.modalidades[g.modalidade] || { nome: g.modalidade, curto: g.modalidade };
     var local = (D.locais[g.local] || { nome: g.local }).nome;
     var done = finished(g);
+    var wo = woWinner(g);
     var hc = "home", ac = "away";
-    if (done && g.placar[0] !== g.placar[1]) {
-      var homeWins = g.placar[0] > g.placar[1];
+    if (wo || (done && g.placar[0] !== g.placar[1])) {
+      var homeWins = wo ? wo === "h" : g.placar[0] > g.placar[1];
       hc += homeWins ? " win" : " lose"; ac += homeWins ? " lose" : " win";
     }
     if (mine && g.mandante === mine) hc += " mine";
     if (mine && g.visitante === mine) ac += " mine";
 
     // The official VS mark always sits in the centre; scores flank it, as in the art.
-    var scored = done && hasScore(g);
-    var sh = scored ? '<div class="sc home-sc">' + g.placar[0] + "</div>" : '<div class="sc"></div>';
-    var sa = scored ? '<div class="sc away-sc">' + g.placar[1] + "</div>" : '<div class="sc"></div>';
+    // W.O.: "W" beside the team that showed up, "O" beside the one that didn't, instead of a score.
+    var scored = !wo && done && hasScore(g);
+    var left = wo ? (wo === "h" ? "W" : "O") : scored ? g.placar[0] : "";
+    var right = wo ? (wo === "a" ? "W" : "O") : scored ? g.placar[1] : "";
+    var sh = '<div class="sc' + (left !== "" ? " home-sc" : "") + '">' + left + "</div>";
+    var sa = '<div class="sc' + (right !== "" ? " away-sc" : "") + '">' + right + "</div>";
     var status = "";
     if (g.status === "encerrado") status = '<span class="tag">Final</span>';
     else if (g.status === "wo") status = '<span class="tag">W.O.</span>';
@@ -221,7 +231,8 @@
 
     return '<article class="game ' + (g.naipe === "M" ? "m" : "f") + '" aria-label="' +
       esc(mod.nome + " " + NAIPE[g.naipe] + ", " + g.hora + ", " + local + ", " + teamText(g.mandante) + " contra " + teamText(g.visitante) +
-        (scored ? ", placar " + g.placar[0] + " a " + g.placar[1] : "")) + '">' +
+        (scored ? ", placar " + g.placar[0] + " a " + g.placar[1] : "") +
+        (wo ? ", vitória por W.O. de " + teamText(wo === "h" ? g.mandante : g.visitante) : "")) + '">' +
       '<div class="bar">' +
         '<div class="when"><span class="hora">' + esc(g.hora) + '</span><span class="mod-m">' + esc(mod.curto) + "</span>" + status + "</div>" +
         teamHTML(g.mandante, hc) + sh +

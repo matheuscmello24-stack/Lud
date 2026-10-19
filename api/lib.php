@@ -150,7 +150,9 @@ function validar(array $d): string {
             if (!is_array($p) || count($p) !== 2 || !array_is_list($p)) return "Placar inválido em $onde.";
             foreach ($p as $n) if (!is_int($n) || $n < 0 || $n > 999) return "Placar inválido em $onde.";
         }
-        if (in_array($g['status'], ['encerrado', 'wo'], true) && !isset($g['placar'])) return "Informe o placar em $onde.";
+        if ($g['status'] === 'encerrado' && !isset($g['placar'])) return "Informe o placar em $onde.";
+        if (isset($g['vencedor']) && !in_array($g['vencedor'], ['h', 'a'], true)) return "Vencedor do W.O. inválido em $onde.";
+        if ($g['status'] === 'wo' && !isset($g['vencedor']) && !isset($g['placar'])) return "Informe quem compareceu no W.O. em $onde.";
         if (isset($g['parciais'])) {
             if (!is_array($g['parciais']) || count($g['parciais']) > 7) return "Parciais inválidas em $onde.";
             foreach ($g['parciais'] as $p) if (!texto_opc($p, 12)) return "Parciais inválidas em $onde.";

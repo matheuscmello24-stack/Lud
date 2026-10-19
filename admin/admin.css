@@ -89,6 +89,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .res-more { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 10px; }
 .res-more .full { grid-column: 1 / -1; }
 
+.wo-pick { border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 12px 10px; margin: 0; }
+.wo-pick legend { font-size: 12px; font-weight: 600; color: var(--ink-2); padding: 0 4px; }
+.wo-opt { display: flex; align-items: center; gap: 10px; margin: 6px 0 0; font-size: 15px; font-weight: 800; color: var(--ink); text-transform: uppercase; cursor: pointer; }
+.wo-opt input { width: 20px; height: 20px; accent-color: var(--blue); }
+
 /* Game list (Jogos tab) */
 .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 12px; }
 .span2 { grid-column: 1 / -1; }

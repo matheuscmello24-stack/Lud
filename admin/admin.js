@@ -155,20 +155,26 @@
       if (g.local !== lastLocal) { html += '<h3 class="venue-title">' + esc((D.locais[g.local] || {}).nome || g.local) + "</h3>"; lastLocal = g.local; }
       var mod = D.modalidades[g.modalidade] || { nome: g.modalidade };
       var p = Array.isArray(g.placar) ? g.placar : ["", ""];
+      var isWo = g.status === "wo";
+      var woV = g.vencedor || (isWo && g.placar ? (g.placar[0] >= g.placar[1] ? "h" : "a") : "");
       html += '<form class="card res ' + (g.naipe === "M" ? "m" : "f") + '" data-id="' + esc(g.id) + '">' +
         '<div class="res-head"><b>' + esc(g.hora) + "</b><span>" + esc(mod.nome) + " " + NAIPE[g.naipe] + '</span><span class="state ' + g.status + '">' + STATUS[g.status] + "</span></div>" +
-        '<div class="score-row">' +
+        '<div class="score-row"' + (isWo ? " hidden" : "") + ">" +
           '<span class="t">' + esc(teamName(g.mandante)) + "</span>" +
           '<input type="number" inputmode="numeric" min="0" max="999" name="sh" id="sh-' + esc(g.id) + '" value="' + p[0] + '" aria-label="Placar de ' + esc(teamName(g.mandante)) + '">' +
           '<span class="x">×</span>' +
           '<input type="number" inputmode="numeric" min="0" max="999" name="sa" id="sa-' + esc(g.id) + '" value="' + p[1] + '" aria-label="Placar de ' + esc(teamName(g.visitante)) + '">' +
           '<span class="t r">' + esc(teamName(g.visitante)) + "</span>" +
         "</div>" +
+        '<fieldset class="wo-pick"' + (isWo ? "" : " hidden") + '><legend>Quem compareceu (vence por W.O.)</legend>' +
+          '<label class="wo-opt"><input type="radio" name="vencedor" value="h"' + (woV === "h" ? " checked" : "") + "> " + esc(teamName(g.mandante)) + "</label>" +
+          '<label class="wo-opt"><input type="radio" name="vencedor" value="a"' + (woV === "a" ? " checked" : "") + "> " + esc(teamName(g.visitante)) + "</label>" +
+        "</fieldset>" +
         '<div class="res-more">' +
           '<div><label for="st-' + esc(g.id) + '">Situação</label><select name="status" id="st-' + esc(g.id) + '">' +
             Object.keys(STATUS).map(function (k) { return '<option value="' + k + '"' + (k === g.status ? " selected" : "") + ">" + STATUS[k] + "</option>"; }).join("") +
           "</select></div>" +
-          (mod.sets ? '<div><label for="pa-' + esc(g.id) + '">Parciais</label><input name="parciais" id="pa-' + esc(g.id) + '" placeholder="25/13 25/17" value="' + esc((g.parciais || []).join(" ")) + '"></div>' : "<div></div>") +
+          (mod.sets ? '<div' + (isWo ? " hidden" : "") + '><label for="pa-' + esc(g.id) + '">Parciais</label><input name="parciais" id="pa-' + esc(g.id) + '" placeholder="25/13 25/17" value="' + esc((g.parciais || []).join(" ")) + '"></div>' : "<div></div>") +
           '<div class="full"><label for="ob-' + esc(g.id) + '">Observação (opcional)</label><input name="obs" id="ob-' + esc(g.id) + '" maxlength="140" value="' + esc(g.obs || "") + '"></div>' +
         "</div>" +
         '<div class="actions"><button type="submit" class="btn primary">Salvar resultado</button>' +
@@ -178,6 +184,15 @@
     $("lista-resultados").innerHTML = html;
   }
 
+  // Choosing W.O. swaps the score inputs for "who showed up".
+  $("lista-resultados").addEventListener("change", function (e) {
+    if (e.target.name !== "status") return;
+    var f = e.target.form, wo = e.target.value === "wo";
+    f.querySelector(".score-row").hidden = wo;
+    f.querySelector(".wo-pick").hidden = !wo;
+    if (wo && f.elements.parciais) f.elements.parciais.closest("div").hidden = true;
+    else if (f.elements.parciais) f.elements.parciais.closest("div").hidden = false;
+  });
   $("lista-resultados").addEventListener("input", function (e) {
     // Typing a score on a scheduled game marks it as finished.
     if (e.target.name !== "sh" && e.target.name !== "sa") return;
@@ -190,13 +205,17 @@
     var status = el.status.value;
     var sh = el.sh.value.trim(), sa = el.sa.value.trim();
     var hasScore = sh !== "" && sa !== "";
-    if ((status === "encerrado" || status === "wo") && !hasScore) { toast("Preencha os dois placares para marcar como " + STATUS[status] + ".", true); return; }
-    if ((sh === "") !== (sa === "")) { toast("Preencha os dois placares ou deixe os dois em branco.", true); return; }
+    var vencedor = status === "wo" ? (f.querySelector("input[name=vencedor]:checked") || {}).value || "" : "";
+    if (status === "wo" && !vencedor) { toast("Escolha quem compareceu para registrar o W.O.", true); return; }
+    if (status === "encerrado" && !hasScore) { toast("Preencha os dois placares para marcar como Encerrado.", true); return; }
+    if (status !== "wo" && (sh === "") !== (sa === "")) { toast("Preencha os dois placares ou deixe os dois em branco.", true); return; }
     save(function (d) {
       var g = d.jogos.find(function (x) { return x.id === id; });
       if (!g) return "Esse jogo foi removido por outra pessoa.";
       g.status = status;
-      if (hasScore && status !== "agendado" && status !== "adiado") g.placar = [parseInt(sh, 10), parseInt(sa, 10)]; else delete g.placar;
+      if (status === "wo") { g.vencedor = vencedor; delete g.placar; delete g.parciais; }
+      else delete g.vencedor;
+      if (status === "encerrado" && hasScore) g.placar = [parseInt(sh, 10), parseInt(sa, 10)]; else delete g.placar;
       var parc = el.parciais ? el.parciais.value.trim().split(/[\s,;]+/).filter(Boolean) : [];
       if (parc.length && g.placar) g.parciais = parc; else delete g.parciais;
       var obs = el.obs.value.trim();
@@ -209,7 +228,7 @@
     save(function (d) {
       var g = d.jogos.find(function (x) { return x.id === id; });
       if (!g) return "Esse jogo foi removido por outra pessoa.";
-      g.status = "agendado"; delete g.placar; delete g.parciais; delete g.obs;
+      g.status = "agendado"; delete g.placar; delete g.parciais; delete g.obs; delete g.vencedor;
     }, "Resultado removido");
   });
 
@@ -257,7 +276,7 @@
         '<span class="h">' + esc(g.hora) + "</span>" +
         '<span class="d"><b>' + esc(teamName(g.mandante)) + " × " + esc(teamName(g.visitante)) + "</b><small>" +
           esc(mod.nome) + " " + NAIPE[g.naipe] + " · " + esc((D.locais[g.local] || {}).nome || g.local) + " · " + STATUS[g.status] +
-          (g.placar ? " " + g.placar[0] + "×" + g.placar[1] : "") + "</small></span>" +
+          (g.status === "wo" && g.vencedor ? " (vence " + esc(teamName(g.vencedor === "h" ? g.mandante : g.visitante)) + ")" : g.placar ? " " + g.placar[0] + "×" + g.placar[1] : "") + "</small></span>" +
         '<span class="b"><button type="button" class="btn sm" data-acao="editar">Editar</button><button type="button" class="btn sm danger" data-acao="excluir">Excluir</button></span>' +
         "</div>";
     }).join("") : '<div class="empty">Nenhum jogo neste dia.</div>';
