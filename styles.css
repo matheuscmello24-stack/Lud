@@ -183,24 +183,23 @@ img { max-width: 100%; }
 }
 
 /* ---------- Banner da festa ---------- */
-:root { --festa: #7a16c4; --festa-escuro: #500080; --festa-luz: #a050d0; }
+:root { --festa: #7a16c4; }
 .promo { display: flex; flex-direction: column; gap: 10px; }
 .promo-img { display: block; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(40, 0, 80, .35); }
 .promo-img img { display: block; width: 100%; height: auto; }
 .promo-btn {
   display: block; text-align: center; text-decoration: none; color: #fff;
   font-family: var(--display); font-size: 20px; letter-spacing: .03em; text-transform: uppercase; line-height: 1;
-  padding: 15px 14px; border-radius: 12px;
-  background: linear-gradient(180deg, var(--festa-luz) 0%, var(--festa) 45%, var(--festa-escuro) 100%);
-  border: 2px solid rgba(255, 255, 255, .35);
-  animation: festa-pulso 1.8s ease-out infinite;
+  padding: 15px 14px; border: 0; border-radius: 14px;
+  background: var(--festa);
+  animation: festa-brilho 1.6s ease-in-out infinite;
 }
 .promo-btn:hover { filter: brightness(1.12); }
 .promo-btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-@keyframes festa-pulso {
-  0%   { box-shadow: 0 0 0 0 rgba(160, 80, 208, .85), 0 0 12px 2px rgba(160, 80, 208, .6); }
-  70%  { box-shadow: 0 0 0 16px rgba(160, 80, 208, 0), 0 0 22px 6px rgba(160, 80, 208, .35); }
-  100% { box-shadow: 0 0 0 0 rgba(160, 80, 208, 0), 0 0 12px 2px rgba(160, 80, 208, .6); }
+/* The button's own colour glows outward and fades back. */
+@keyframes festa-brilho {
+  0%, 100% { box-shadow: 0 0 4px 0 rgba(199, 125, 255, .5), 0 0 0 0 rgba(160, 80, 208, 0); }
+  50%      { box-shadow: 0 0 16px 4px rgba(214, 160, 255, .95), 0 0 42px 14px rgba(170, 70, 240, .75); }
 }
 /* Phones and tablets: horizontal banner between the filters and the games. */
 .promo-inline { max-width: 640px; margin: 4px auto 6px; }
@@ -262,5 +261,5 @@ img { max-width: 100%; }
 }
 .toast.show { opacity: 1; translate: -50% 0; }
 
-@media (prefers-reduced-motion: reduce) { .promo-btn { animation: none; box-shadow: 0 0 16px 4px rgba(160, 80, 208, .6); } }
+@media (prefers-reduced-motion: reduce) { .promo-btn { animation: none; box-shadow: 0 0 16px 4px rgba(214, 160, 255, .8), 0 0 36px 10px rgba(170, 70, 240, .5); } }
 @media (prefers-reduced-motion: reduce) { .toast, .t-side { transition: none; } .torcida.open .t-bar { animation: none; } }
