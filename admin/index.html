@@ -67,16 +67,19 @@
               <div class="seg">
                 <input type="radio" name="naipe" id="j-naipe-f" value="F" required><label for="j-naipe-f"><i class="dot f"></i>Feminino</label>
                 <input type="radio" name="naipe" id="j-naipe-m" value="M"><label for="j-naipe-m"><i class="dot m"></i>Masculino</label>
+                <input type="radio" name="naipe" id="j-naipe-x" value=""><label for="j-naipe-x">Sem naipe</label>
               </div>
             </div>
-            <div><label for="j-mandante">Equipe 1 (esquerda)</label><select id="j-mandante" required></select></div>
-            <div><label for="j-visitante">Equipe 2 (direita)</label><select id="j-visitante" required></select></div>
+            <div><label for="j-mandante">Equipe 1 (esquerda)</label><select id="j-mandante"></select></div>
+            <div><label for="j-visitante">Equipe 2 (direita)</label><select id="j-visitante"></select></div>
+            <div><label for="j-fase">Fase (opcional)</label><input id="j-fase" maxlength="30" placeholder="Ex.: Semi 1, Final LOL"></div>
+            <div><label for="j-cor">Cor da barra</label><select id="j-cor"><option value="">Automática</option><option value="amarelo">Amarelo</option><option value="rosa">Rosa</option></select></div>
           </div>
           <div class="actions">
             <button type="submit" class="btn primary" id="jogo-salvar">Adicionar jogo</button>
             <button type="button" class="btn" id="jogo-cancelar" hidden>Cancelar edição</button>
           </div>
-          <p class="muted small" id="jogo-dica">Depois de adicionar, o formulário mantém data, local e modalidade e avança o horário em 1 hora, para agilizar o cadastro da grade.</p>
+          <p class="muted small" id="jogo-dica">Depois de adicionar, o formulário mantém data, local e modalidade e avança o horário em 1 hora, para agilizar o cadastro da grade. Para semifinais e finais ainda sem equipes, deixe as equipes em "A definir" e preencha a Fase. Cor "Automática" usa a cor da modalidade ou, se ela não tiver, o naipe (amarelo = masculino, rosa = feminino).</p>
         </form>
         <details class="card lote" id="lote">
           <summary><h2>Importar grade de um dia (colar texto)</h2></summary>
@@ -123,12 +126,14 @@
         </section>
         <section class="card">
           <h2>Modalidades</h2>
-          <p class="muted small">A sigla aparece na barra do jogo (ex.: HAND, FUT). Marque "sets" para mostrar o campo de parciais.</p>
+          <p class="muted small">A sigla aparece na barra do jogo (ex.: HAND, FUT). Marque "sets" para mostrar o campo de parciais. Para modalidades sem naipe (como e-sports), marque "sem naipe" e escolha a cor da barra.</p>
           <div id="cad-modalidades" class="cad"></div>
           <form class="cad-add" method="post" data-tipo="modalidades">
             <input name="nome" placeholder="Nome (ex.: Handebol)" aria-label="Nome da nova modalidade" required maxlength="40">
             <input name="curto" placeholder="Sigla (ex.: HAND)" aria-label="Sigla" required maxlength="12">
             <label class="check"><input type="checkbox" name="sets"> sets</label>
+            <label class="check"><input type="checkbox" name="semNaipe"> sem naipe</label>
+            <select name="cor" aria-label="Cor da barra"><option value="">Cor: pelo naipe</option><option value="amarelo">Amarelo</option><option value="rosa">Rosa</option></select>
             <button class="btn primary" type="submit">Adicionar</button>
           </form>
         </section>
@@ -157,6 +162,14 @@
           <input id="bn-texto" maxlength="40" required>
           <div class="actions"><button type="submit" class="btn primary">Salvar banner</button></div>
         </form>
+        <section class="card">
+          <h2>Importar jogos de arquivo</h2>
+          <p class="muted small">Acrescenta jogos e cadastros de um arquivo .json preparado para o site (mesmo formato do backup). Nada do que já existe é apagado ou alterado: jogos repetidos são ignorados e equipes, locais e modalidades com o mesmo nome são reaproveitados.</p>
+          <label for="imp-arquivo">Arquivo</label>
+          <input type="file" id="imp-arquivo" accept=".json,application/json">
+          <div id="imp-resumo"></div>
+          <div class="actions"><button type="button" class="btn primary" id="imp-confirmar" disabled>Adicionar ao site</button></div>
+        </section>
         <section class="card">
           <h2>Backup</h2>
           <p class="muted small">Baixa uma cópia de todos os dados (jogos, placares e cadastros) em JSON. Faça ao fim de cada dia.</p>

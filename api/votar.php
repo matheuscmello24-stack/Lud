@@ -14,6 +14,7 @@ if (!e_chave($id) || !in_array($lado, ['h', 'a'], true)) responder(['erro' => 'V
 $jogo = null;
 foreach (ler_dados()['jogos'] as $g) if ($g['id'] === $id) { $jogo = $g; break; }
 if (!$jogo) responder(['erro' => 'Jogo não encontrado.'], 404);
+if (($jogo['mandante'] ?? '') === '') responder(['erro' => 'As equipes deste jogo ainda não foram definidas.'], 409);
 if (in_array($jogo['status'], ['encerrado', 'wo'], true)) responder(['erro' => 'A votação deste jogo já foi encerrada.'], 409);
 
 responder(somar_voto($id, $lado));

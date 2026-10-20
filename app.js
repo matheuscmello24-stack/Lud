@@ -149,11 +149,18 @@
   }
 
   // ---------- helpers ----------
+  // Bar colour: the game's own choice, else its modality's, else by gender (yellow = male, pink = female).
+  function isYellow(g) {
+    var cor = g.cor || (D.modalidades[g.modalidade] || {}).cor;
+    return cor ? cor === "amarelo" : g.naipe === "M";
+  }
   function teamHTML(key, cls) {
+    if (!key) return '<div class="team tbd ' + (cls || "") + '">A definir</div>';
     var t = D.equipes[key] || { nome: key };
     return '<div class="team ' + (cls || "") + '">' + esc(t.nome) + (t.destaque ? "<em>" + esc(t.destaque) + "</em>" : "") + "</div>";
   }
   function teamText(key) {
+    if (!key) return "A definir";
     var t = D.equipes[key] || { nome: key };
     return t.nome + (t.destaque ? " " + t.destaque : "");
   }
@@ -241,10 +248,11 @@
     if (g.status === "encerrado") status = '<span class="tag">Final</span>';
     else if (g.status === "wo") status = '<span class="tag">W.O.</span>';
     else if (g.status === "adiado") status = '<span class="tag">Adiado</span>';
+    else if (g.fase) status = '<span class="tag fase">' + esc(g.fase) + "</span>";
     var sets = scored && g.parciais && g.parciais.length ? '<span class="sets">' + g.parciais.map(esc).join(" ") + "</span>" : "";
 
-    return '<article class="game ' + (g.naipe === "M" ? "m" : "f") + '" aria-label="' +
-      esc(mod.nome + " " + NAIPE[g.naipe] + ", " + g.hora + ", " + local + ", " + teamText(g.mandante) + " contra " + teamText(g.visitante) +
+    return '<article class="game ' + (isYellow(g) ? "m" : "f") + '" aria-label="' +
+      esc(mod.nome + (NAIPE[g.naipe] ? " " + NAIPE[g.naipe] : "") + (g.fase ? ", " + g.fase : "") + ", " + g.hora + ", " + local + ", " + teamText(g.mandante) + " contra " + teamText(g.visitante) +
         (scored ? ", placar " + g.placar[0] + " a " + g.placar[1] : "") +
         (wo ? ", vitória por W.O. de " + teamText(wo === "h" ? g.mandante : g.visitante) : "")) + '">' +
       '<div class="bar">' +
@@ -254,7 +262,7 @@
         sa + teamHTML(g.visitante, ac) +
         '<div class="mod">' + esc(mod.curto) + "</div>" +
       "</div>" +
-      (g.status === "adiado" || (finished(g) && !((T[g.id] || {}).h + (T[g.id] || {}).a)) ? "" : torcidaHTML(g)) +
+      (g.status === "adiado" || !g.mandante || (finished(g) && !((T[g.id] || {}).h + (T[g.id] || {}).a)) ? "" : torcidaHTML(g)) +
       (g.obs ? '<p class="obs">' + esc(g.obs) + "</p>" : "") +
       "</article>";
   }
@@ -276,6 +284,9 @@
         games.map(function (g) { return gameHTML(g, mine, shown++ >= 4); }).join("") + "</section>";
     });
     $("view-jogos").innerHTML = html;
+    // The female/male colour legend only makes sense on days with gendered games.
+    var temNaipe = D.jogos.some(function (g) { return g.data === state.dia && g.naipe; });
+    document.querySelectorAll(".side-legend, .legend-inline").forEach(function (el) { el.hidden = !temNaipe; });
     $("view-jogos").querySelectorAll(".t-side[data-w]").forEach(function (el) { el.style.width = el.dataset.w + "%"; });
   }
 

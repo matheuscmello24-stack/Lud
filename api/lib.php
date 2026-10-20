@@ -9,7 +9,8 @@ if (!function_exists('array_is_list')) { // PHP < 8.1
 }
 
 const STATUS = ['agendado', 'encerrado', 'wo', 'adiado'];
-const NAIPES = ['F', 'M'];
+const NAIPES = ['F', 'M', ''];   // '' = sem naipe (ex.: e-sports)
+const CORES = ['amarelo', 'rosa'];
 define('STORAGE', dirname(__DIR__) . '/storage');
 define('SEED', dirname(__DIR__) . '/data/seed.json');
 define('DADOS', STORAGE . '/dados.json');
@@ -140,6 +141,8 @@ function validar(array $d): string {
         foreach ($col as $k => $v) {
             if (!e_chave((string) $k) || !is_array($v) || !texto_ok($v['nome'] ?? null, 40)) return "Item inválido em $nome: $k.";
             if (!texto_opc($v['destaque'] ?? null, 20) || !texto_opc($v['curto'] ?? null, 12)) return "Item inválido em $nome: $k.";
+            if (isset($v['cor']) && !in_array($v['cor'], CORES, true)) return "Cor inválida em $nome: $k.";
+            if (isset($v['semNaipe']) && !is_bool($v['semNaipe'])) return "Item inválido em $nome: $k.";
         }
     }
     $jogos = $d['jogos'] ?? null;
@@ -153,8 +156,17 @@ function validar(array $d): string {
         if (!isset($d['locais'][$g['local'] ?? ''])) return "Local inexistente em $onde.";
         if (!isset($d['modalidades'][$g['modalidade'] ?? ''])) return "Modalidade inexistente em $onde.";
         if (!in_array($g['naipe'] ?? '', NAIPES, true)) return "Naipe inválido em $onde.";
-        if (!isset($d['equipes'][$g['mandante'] ?? '']) || !isset($d['equipes'][$g['visitante'] ?? ''])) return "Equipe inexistente em $onde.";
-        if ($g['mandante'] === $g['visitante']) return "Uma equipe não pode jogar contra si mesma ($onde).";
+        if (isset($g['cor']) && !in_array($g['cor'], CORES, true)) return "Cor inválida em $onde.";
+        if (!texto_opc($g['fase'] ?? null, 30)) return "Fase longa demais em $onde.";
+        $m = $g['mandante'] ?? ''; $v = $g['visitante'] ?? '';
+        if ($m === '' && $v === '') {
+            // Teams still unknown (e.g. "Semi 1"): allowed only with a phase name and without a result.
+            if (trim((string) ($g['fase'] ?? '')) === '') return "Informe as equipes ou a fase (ex.: Semi 1) em $onde.";
+            if ($g['status'] === 'encerrado' || $g['status'] === 'wo') return "Defina as equipes antes de lançar o resultado em $onde.";
+        } else {
+            if (!isset($d['equipes'][$m]) || !isset($d['equipes'][$v])) return "Equipe inexistente em $onde.";
+            if ($m === $v) return "Uma equipe não pode jogar contra si mesma ($onde).";
+        }
         if (!in_array($g['status'] ?? '', STATUS, true)) return "Situação inválida em $onde.";
         if (isset($g['placar'])) {
             $p = $g['placar'];

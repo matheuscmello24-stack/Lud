@@ -34,7 +34,13 @@
     var p = iso.split("-"), d = new Date(+p[0], +p[1] - 1, +p[2]);
     return DIAS[d.getDay()] + " " + p[2] + "/" + p[1];
   }
-  function teamName(k) { var t = D.equipes[k]; return t ? t.nome + (t.destaque ? " " + t.destaque : "") : k; }
+  function isYellow(g) {
+    var cor = g.cor || (D.modalidades[g.modalidade] || {}).cor;
+    return cor ? cor === "amarelo" : g.naipe === "M";
+  }
+  function naipeTxt(n) { return NAIPE[n] ? " " + NAIPE[n] : ""; }
+  function teamName(k) {
+    if (!k) return "A definir"; var t = D.equipes[k]; return t ? t.nome + (t.destaque ? " " + t.destaque : "") : k; }
   function newId(prefix) { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   function keyFrom(name, col) {
     var base = name.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/[^A-Z0-9]+/g, "").slice(0, 16) || "ITEM";
@@ -157,8 +163,8 @@
       var p = Array.isArray(g.placar) ? g.placar : ["", ""];
       var isWo = g.status === "wo";
       var woV = g.vencedor || (isWo && g.placar ? (g.placar[0] >= g.placar[1] ? "h" : "a") : "");
-      html += '<form class="card res ' + (g.naipe === "M" ? "m" : "f") + '" data-id="' + esc(g.id) + '">' +
-        '<div class="res-head"><b>' + esc(g.hora) + "</b><span>" + esc(mod.nome) + " " + NAIPE[g.naipe] + '</span><span class="state ' + esc(g.status) + '">' + esc(STATUS[g.status] || g.status) + "</span></div>" +
+      html += '<form class="card res ' + (isYellow(g) ? "m" : "f") + '" data-id="' + esc(g.id) + '">' +
+        '<div class="res-head"><b>' + esc(g.hora) + "</b><span>" + esc(mod.nome) + naipeTxt(g.naipe) + (g.fase ? " · " + esc(g.fase) : "") + '</span><span class="state ' + esc(g.status) + '">' + esc(STATUS[g.status] || g.status) + "</span></div>" +
         '<div class="score-row"' + (isWo ? " hidden" : "") + ">" +
           '<span class="t">' + esc(teamName(g.mandante)) + "</span>" +
           '<input type="number" inputmode="numeric" min="0" max="999" name="sh" id="sh-' + esc(g.id) + '" value="' + esc(p[0]) + '" aria-label="Placar de ' + esc(teamName(g.mandante)) + '">' +
@@ -243,8 +249,8 @@
     keep = keep || {};
     $("j-local").innerHTML = options(D.locais, keep.local || ui.local);
     $("j-mod").innerHTML = options(D.modalidades, keep.modalidade);
-    $("j-mandante").innerHTML = options(D.equipes, keep.mandante, "Escolha…");
-    $("j-visitante").innerHTML = options(D.equipes, keep.visitante, "Escolha…");
+    $("j-mandante").innerHTML = options(D.equipes, keep.mandante, "A definir");
+    $("j-visitante").innerHTML = options(D.equipes, keep.visitante, "A definir");
   }
   function resetForm(keep) {
     ui.editing = "";
@@ -256,7 +262,8 @@
     $("j-data").value = (keep && keep.data) || ui.dia || todayISO();
     $("j-hora").value = (keep && keep.hora) || "";
     var n = keep && keep.naipe;
-    $("j-naipe-f").checked = n === "F"; $("j-naipe-m").checked = n === "M";
+    $("j-naipe-f").checked = n === "F"; $("j-naipe-m").checked = n === "M"; $("j-naipe-x").checked = n === "";
+    $("j-fase").value = ""; $("j-cor").value = (keep && keep.cor) || "";
   }
   function renderJogos() {
     if (!ui.editing && !$("j-local").options.length) resetForm();
@@ -272,10 +279,10 @@
     $("jogos-titulo").textContent = ui.dia ? "Jogos de " + dayLabel(ui.dia) + " (" + list.length + ")" : "";
     $("lista-jogos").innerHTML = list.length ? list.map(function (g) {
       var mod = D.modalidades[g.modalidade] || { nome: g.modalidade };
-      return '<div class="row ' + (g.naipe === "M" ? "m" : "f") + (g.id === ui.editing ? " editing" : "") + '" data-id="' + esc(g.id) + '">' +
+      return '<div class="row ' + (isYellow(g) ? "m" : "f") + (g.id === ui.editing ? " editing" : "") + '" data-id="' + esc(g.id) + '">' +
         '<span class="h">' + esc(g.hora) + "</span>" +
         '<span class="d"><b>' + esc(teamName(g.mandante)) + " × " + esc(teamName(g.visitante)) + "</b><small>" +
-          esc(mod.nome) + " " + NAIPE[g.naipe] + " · " + esc((D.locais[g.local] || {}).nome || g.local) + " · " + esc(STATUS[g.status] || g.status) +
+          esc(mod.nome) + naipeTxt(g.naipe) + (g.fase ? " · " + esc(g.fase) : "") + " · " + esc((D.locais[g.local] || {}).nome || g.local) + " · " + esc(STATUS[g.status] || g.status) +
           (g.status === "wo" && g.vencedor ? " (vence " + esc(teamName(g.vencedor === "h" ? g.mandante : g.visitante)) + ")" : g.placar ? " " + esc(g.placar[0]) + "×" + esc(g.placar[1]) : "") + "</small></span>" +
         '<span class="b"><button type="button" class="btn sm" data-acao="editar">Editar</button><button type="button" class="btn sm danger" data-acao="excluir">Excluir</button></span>' +
         "</div>";
@@ -288,13 +295,17 @@
 
   $("jogo-form").addEventListener("submit", function (e) {
     e.preventDefault();
+    var naipeMarcado = $("j-naipe-f").checked || $("j-naipe-m").checked || $("j-naipe-x").checked;
     var naipe = $("j-naipe-f").checked ? "F" : $("j-naipe-m").checked ? "M" : "";
     var g = {
       data: $("j-data").value, hora: $("j-hora").value.slice(0, 5), local: $("j-local").value, modalidade: $("j-mod").value,
       naipe: naipe, mandante: $("j-mandante").value, visitante: $("j-visitante").value,
     };
-    if (!g.data || !g.hora || !g.local || !g.modalidade || !g.naipe || !g.mandante || !g.visitante) { toast("Preencha todos os campos do jogo.", true); return; }
-    if (g.mandante === g.visitante) { toast("Escolha duas equipes diferentes.", true); return; }
+    var fase = $("j-fase").value.trim(), cor = $("j-cor").value;
+    if (!g.data || !g.hora || !g.local || !g.modalidade || !naipeMarcado) { toast("Preencha data, horário, local, modalidade e naipe.", true); return; }
+    if (!g.mandante !== !g.visitante) { toast("Escolha as duas equipes ou deixe as duas como \"A definir\".", true); return; }
+    if (!g.mandante && !fase) { toast("Sem equipes definidas, informe a Fase (ex.: Semi 1).", true); return; }
+    if (g.mandante && g.mandante === g.visitante) { toast("Escolha duas equipes diferentes.", true); return; }
     var editing = ui.editing;
     var clash = D.jogos.find(function (x) { return x.id !== editing && x.data === g.data && x.hora === g.hora && x.local === g.local; });
     save(function (d) {
@@ -302,15 +313,19 @@
         var cur = d.jogos.find(function (x) { return x.id === editing; });
         if (!cur) return "Esse jogo foi removido por outra pessoa.";
         Object.assign(cur, g);
+        if (fase) cur.fase = fase; else delete cur.fase;
+        if (cor) cur.cor = cor; else delete cur.cor;
       } else {
         g.id = newId("j"); g.status = "agendado";
+        if (fase) g.fase = fase;
+        if (cor) g.cor = cor;
         d.jogos.push(g);
       }
     }, (editing ? "Jogo atualizado" : "Jogo adicionado") + (clash ? ". Atenção: já existe outro jogo nesse horário e local." : "")).then(function (ok) {
       if (!ok) return;
       ui.dia = g.data;
       if (editing) resetForm({ data: g.data, local: g.local, modalidade: g.modalidade });
-      else resetForm({ data: g.data, hora: addHour(g.hora), local: g.local, modalidade: g.modalidade, naipe: g.naipe });
+      else resetForm({ data: g.data, hora: addHour(g.hora), local: g.local, modalidade: g.modalidade, naipe: g.naipe, cor: cor });
       render();
     });
   });
@@ -373,19 +388,21 @@
     if (!m) return { erro: "Linha " + n + ": não entendi. Use HORÁRIO EQUIPE x EQUIPE MODALIDADE NAIPE." };
     var hora = String(m[1]).padStart(2, "0") + ":" + m[2];
     var rest = m[4].trim().split(/\s+/);
-    if (rest.length < 3) return { erro: "Linha " + n + ": faltou a modalidade ou o naipe." };
-    var naipe = NAIPE_TXT[norm(rest.pop())];
+    if (rest.length < 2) return { erro: "Linha " + n + ": faltou a modalidade." };
+    var naipe = NAIPE_TXT[norm(rest[rest.length - 1])];
+    if (naipe) rest.pop();
     var mod = findMod(rest.pop());
+    if (!naipe && mod && D.modalidades[mod].semNaipe) naipe = "-";
     var t1 = findTeam(m[3]), t2 = findTeam(rest.join(" "));
     var faltas = [];
     if (+m[1] > 23 || +m[2] > 59) faltas.push("horário inválido");
     if (!t1) faltas.push('equipe "' + m[3].trim() + '" não cadastrada');
     if (!t2) faltas.push('equipe "' + rest.join(" ") + '" não cadastrada');
     if (!mod) faltas.push("modalidade não cadastrada");
-    if (!naipe) faltas.push("naipe deve ser F ou M");
+    if (!naipe) faltas.push("naipe deve ser F ou M (só modalidades marcadas como \"sem naipe\" dispensam)");
     if (t1 && t1 === t2) faltas.push("equipes iguais");
     if (faltas.length) return { erro: "Linha " + n + ": " + faltas.join("; ") + "." };
-    return { jogo: { hora: hora, modalidade: mod, naipe: naipe, mandante: t1, visitante: t2 } };
+    return { jogo: { hora: hora, modalidade: mod, naipe: naipe === "-" ? "" : naipe, mandante: t1, visitante: t2 } };
   }
   function conferirLote() {
     var data = $("lote-data").value, local = $("lote-local").value;
@@ -401,7 +418,7 @@
       var dup = D.jogos.some(function (x) { return x.data === data && x.hora === g.hora && x.local === local; }) ||
         lote.some(function (x) { return x.hora === g.hora; });
       lote.push(g);
-      out.push("<li>" + esc(g.hora + " · " + teamName(g.mandante) + " × " + teamName(g.visitante) + " · " + D.modalidades[g.modalidade].nome + " " + NAIPE[g.naipe]) +
+      out.push("<li>" + esc(g.hora + " · " + teamName(g.mandante) + " × " + teamName(g.visitante) + " · " + D.modalidades[g.modalidade].nome + naipeTxt(g.naipe)) +
         (dup ? " <b>(já existe jogo nesse horário e local)</b>" : "") + "</li>");
     });
     if (erros) lote = [];
@@ -434,7 +451,8 @@
       ui.editing = id;
       fillFormSelects(g);
       $("j-data").value = g.data; $("j-hora").value = g.hora;
-      $("j-naipe-f").checked = g.naipe === "F"; $("j-naipe-m").checked = g.naipe === "M";
+      $("j-naipe-f").checked = g.naipe === "F"; $("j-naipe-m").checked = g.naipe === "M"; $("j-naipe-x").checked = !g.naipe;
+      $("j-fase").value = g.fase || ""; $("j-cor").value = g.cor || "";
       $("jogo-form-titulo").textContent = "Editar jogo";
       $("jogo-salvar").textContent = "Salvar alterações";
       $("jogo-cancelar").hidden = false; $("jogo-dica").hidden = true;
@@ -471,7 +489,10 @@
           '<input name="nome" value="' + esc(v.nome) + '" aria-label="Nome" required maxlength="40">' +
           (tipo === "equipes" ? '<input name="destaque" value="' + esc(v.destaque || "") + '" placeholder="Complemento" aria-label="Complemento" maxlength="20">' : "") +
           (tipo === "modalidades" ? '<input name="curto" value="' + esc(v.curto || "") + '" placeholder="Sigla" aria-label="Sigla" required maxlength="12">' +
-            '<label class="check"><input type="checkbox" name="sets"' + (v.sets ? " checked" : "") + "> sets</label>" : "") +
+            '<label class="check"><input type="checkbox" name="sets"' + (v.sets ? " checked" : "") + "> sets</label>" +
+            '<label class="check"><input type="checkbox" name="semNaipe"' + (v.semNaipe ? " checked" : "") + "> sem naipe</label>" +
+            '<select name="cor" aria-label="Cor da barra">' + [["", "Cor: pelo naipe"], ["amarelo", "Amarelo"], ["rosa", "Rosa"]].map(function (o) {
+              return '<option value="' + o[0] + '"' + ((v.cor || "") === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") + "</select>" : "") +
           '<span class="uso">' + (n ? "em " + n + (n > 1 ? " jogos" : " jogo") : "sem jogos") + "</span>" +
           '<button type="submit" class="btn sm">Salvar</button>' +
           '<button type="button" class="btn sm danger" data-acao="remover"' + (n ? ' disabled data-locked title="Em uso: altere ou exclua os jogos antes"' : "") + ">Excluir</button>" +
@@ -482,7 +503,12 @@
   function readCad(form, tipo) {
     var el = form.elements, v = { nome: el.nome.value.trim() };
     if (tipo === "equipes" && el.destaque.value.trim()) v.destaque = el.destaque.value.trim();
-    if (tipo === "modalidades") { v.curto = el.curto.value.trim().toUpperCase(); if (el.sets.checked) v.sets = true; }
+    if (tipo === "modalidades") {
+      v.curto = el.curto.value.trim().toUpperCase();
+      if (el.sets.checked) v.sets = true;
+      if (el.semNaipe.checked) v.semNaipe = true;
+      if (el.cor.value) v.cor = el.cor.value;
+    }
     return v;
   }
   document.querySelector("[data-panel=cadastros]").addEventListener("submit", function (e) {
@@ -532,6 +558,73 @@
     var nome = $("ev-nome").value.trim(), aviso = $("ev-aviso").value.trim(), popup = $("ev-popup").value.trim();
     save(function (d) { d.evento.nome = nome; d.evento.aviso = aviso; if (popup) d.evento.popup = popup; else delete d.evento.popup; }, "Dados do evento salvos");
   });
+  // ---------- import games from a file ----------
+  var importacao = null;   // { mapa: {tipo: {chaveArquivo: chaveSite}}, novos: {tipo: {...}}, jogos: [...] }
+  function planejarImportacao(arq) {
+    var plano = { mapa: { equipes: {}, locais: {}, modalidades: {} }, novos: { equipes: {}, locais: {}, modalidades: {} }, jogos: [], repetidos: 0 };
+    ["equipes", "locais", "modalidades"].forEach(function (tipo) {
+      var atuais = Object.assign({}, D[tipo]);
+      Object.keys(arq[tipo] || {}).forEach(function (k) {
+        var v = arq[tipo][k];
+        if (!v || typeof v.nome !== "string") return;
+        // Reuse an existing register with the same name (accents/case ignored), else add it.
+        var igual = Object.keys(atuais).find(function (x) { return norm(atuais[x].nome) === norm(v.nome) && norm(atuais[x].destaque) === norm(v.destaque); });
+        if (igual) { plano.mapa[tipo][k] = igual; return; }
+        var nova = atuais[k] ? keyFrom(v.nome, atuais) : k;
+        atuais[nova] = v; plano.novos[tipo][nova] = v; plano.mapa[tipo][k] = nova;
+      });
+    });
+    (arq.jogos || []).forEach(function (g) {
+      var j = Object.assign({}, g);
+      j.mandante = j.mandante ? plano.mapa.equipes[j.mandante] || j.mandante : "";
+      j.visitante = j.visitante ? plano.mapa.equipes[j.visitante] || j.visitante : "";
+      j.local = plano.mapa.locais[j.local] || j.local;
+      j.modalidade = plano.mapa.modalidades[j.modalidade] || j.modalidade;
+      var existe = D.jogos.some(function (x) {
+        return x.id === j.id || (x.data === j.data && x.hora === j.hora && x.local === j.local && x.modalidade === j.modalidade &&
+          (x.mandante || "") === j.mandante && (x.visitante || "") === j.visitante && (x.fase || "") === (j.fase || ""));
+      });
+      if (existe) { plano.repetidos++; return; }
+      if (!j.id || D.jogos.some(function (x) { return x.id === j.id; })) j.id = newId("j");
+      j.status = j.status || "agendado";
+      plano.jogos.push(j);
+    });
+    return plano;
+  }
+  $("imp-arquivo").addEventListener("change", function () {
+    importacao = null; $("imp-confirmar").disabled = true; $("imp-resumo").innerHTML = "";
+    var f = this.files && this.files[0]; if (!f) return;
+    var leitor = new FileReader();
+    leitor.onload = function () {
+      var arq;
+      try { arq = JSON.parse(leitor.result); } catch (e) { $("imp-resumo").innerHTML = '<p class="erro">Arquivo inválido: não é um JSON.</p>'; return; }
+      if (!arq || !Array.isArray(arq.jogos)) { $("imp-resumo").innerHTML = '<p class="erro">O arquivo não tem uma lista de jogos.</p>'; return; }
+      importacao = planejarImportacao(arq);
+      var n = function (o) { return Object.keys(o).length; };
+      var dias = Array.from(new Set(importacao.jogos.map(function (g) { return g.data; }))).sort().map(dayLabel).join(", ");
+      $("imp-resumo").innerHTML = '<ul class="lote-lista">' +
+        "<li>" + importacao.jogos.length + " jogo(s) novo(s)" + (dias ? " · " + esc(dias) : "") + "</li>" +
+        (importacao.repetidos ? '<li class="erro">' + importacao.repetidos + " jogo(s) já existem e serão ignorados</li>" : "") +
+        (n(importacao.novos.equipes) ? "<li>Equipes novas: " + esc(Object.keys(importacao.novos.equipes).map(function (k) { return importacao.novos.equipes[k].nome; }).join(", ")) + "</li>" : "") +
+        (n(importacao.novos.locais) ? "<li>Locais novos: " + esc(Object.keys(importacao.novos.locais).map(function (k) { return importacao.novos.locais[k].nome; }).join(", ")) + "</li>" : "") +
+        (n(importacao.novos.modalidades) ? "<li>Modalidades novas: " + esc(Object.keys(importacao.novos.modalidades).map(function (k) { return importacao.novos.modalidades[k].nome; }).join(", ")) + "</li>" : "") +
+        "</ul>";
+      $("imp-confirmar").disabled = !importacao.jogos.length && !n(importacao.novos.equipes) && !n(importacao.novos.locais) && !n(importacao.novos.modalidades);
+    };
+    leitor.readAsText(f);
+  });
+  $("imp-confirmar").addEventListener("click", function () {
+    if (!importacao) return;
+    var plano = importacao, total = plano.jogos.length;
+    save(function (d) {
+      ["equipes", "locais", "modalidades"].forEach(function (tipo) { Object.assign(d[tipo], plano.novos[tipo]); });
+      plano.jogos.forEach(function (g) { d.jogos.push(g); });
+    }, total + " jogo(s) adicionado(s) ao site").then(function (ok) {
+      if (!ok) return;
+      importacao = null; $("imp-arquivo").value = ""; $("imp-resumo").innerHTML = ""; $("imp-confirmar").disabled = true;
+    });
+  });
+
   $("backup").addEventListener("click", function () {
     var data = clone(D); delete data._rev;
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });

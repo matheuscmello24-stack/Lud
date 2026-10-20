@@ -137,6 +137,8 @@ img { max-width: 100%; }
 .team em { font-style: italic; font-weight: 300; margin-left: .25em; white-space: nowrap; display: inline-block; }
 .team.mine { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 4px; }
 .team.lose { opacity: .6; }
+.team.tbd { opacity: .75; font-style: italic; }
+.tag.fase { white-space: normal; line-height: 1.1; max-width: 100%; }
 
 /* VS mark fills the bar's full height, as in the art; its knocked-out letters show the bar colour. */
 .vs { position: relative; height: var(--h); display: flex; }
