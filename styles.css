@@ -195,8 +195,16 @@ img { max-width: 100%; }
 .t-side.chosen .t-name::after { content: " ✓"; }
 .torcida.open .t-side:hover, .torcida.open .t-side:focus-visible { filter: brightness(1.08); }
 .torcida.open .t-side:focus-visible { outline: 3px solid var(--yellow); outline-offset: -3px; }
-.torcida.open .t-bar { animation: nudge 2.4s ease-in-out 1s 2; }
-@keyframes nudge { 50% { box-shadow: 0 0 0 3px var(--yellow); } }
+/* While voting is open the bar keeps pulsing with a yellow glow, inviting the tap. */
+.torcida.open .t-bar { animation: torcida-brilho 1.6s ease-in-out infinite; }
+@keyframes torcida-brilho {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(255, 255, 255, .85), 0 0 4px 0 rgba(255, 186, 0, .35); }
+  50%      { box-shadow: 0 0 0 3px var(--yellow), 0 0 18px 6px rgba(255, 186, 0, .75); }
+}
+.t-cta {
+  margin: 6px 0 0; text-align: center; font-family: var(--display); font-size: 13px;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--white);
+}
 
 @media (min-width: 720px) {
   .torcida { margin-left: 122px; margin-right: 26px; }
@@ -286,4 +294,4 @@ img { max-width: 100%; }
 .toast.show { opacity: 1; translate: -50% 0; }
 
 @media (prefers-reduced-motion: reduce) { .promo-btn { animation: none; box-shadow: 0 0 16px 4px rgba(214, 160, 255, .8), 0 0 36px 10px rgba(170, 70, 240, .5); } }
-@media (prefers-reduced-motion: reduce) { .toast, .t-side { transition: none; } .torcida.open .t-bar { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .toast, .t-side { transition: none; } .torcida.open .t-bar { animation: none; box-shadow: 0 0 0 3px var(--yellow), 0 0 12px 3px rgba(255, 186, 0, .6); } }

@@ -73,8 +73,9 @@
     var pa = 100 - ph;
     // Keep each side wide enough to read and tap.
     var wh = Math.min(85, Math.max(15, ph));
-    var info = closed ? "Votação encerrada" : mine ? "Você torce por " + esc(shortName(mine === "h" ? g.mandante : g.visitante)) : "Toque no lado do seu time";
-    if (total) info += " · " + total + (total === 1 ? " voto" : " votos");
+    var votos = total ? total + (total === 1 ? " voto" : " votos") : "";
+    var info = closed ? "Votação encerrada" + (votos ? " · " + votos : "") :
+      mine ? "Você torce por " + esc(shortName(mine === "h" ? g.mandante : g.visitante)) + (votos ? " · " + votos : "") : votos;
     function side(lado, pct, w, team) {
       var label = total ? "<b>" + pct + "%</b>" : "";
       var name = '<span class="t-name">' + esc(shortName(team)) + "</span>";
@@ -85,7 +86,8 @@
     }
     return '<div class="torcida' + (open ? " open" : "") + '" data-id="' + esc(g.id) + '">' +
       '<div class="t-head"><span class="t-title">Torcidômetro</span><span class="t-info">' + info + "</span></div>" +
-      '<div class="t-bar">' + side("h", ph, wh, g.mandante) + side("a", pa, 100 - wh, g.visitante) + "</div></div>";
+      '<div class="t-bar">' + side("h", ph, wh, g.mandante) + side("a", pa, 100 - wh, g.visitante) + "</div>" +
+      (open ? '<p class="t-cta">Clique para torcer</p>' : "") + "</div>";
   }
 
   function vote(id, lado) {
