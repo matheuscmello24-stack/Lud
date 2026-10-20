@@ -516,7 +516,17 @@
     $("ev-nome").value = D.evento.nome || "";
     $("ev-aviso").value = D.evento.aviso || "";
     $("ev-popup").value = D.evento.popup || "";
+    if (!(document.activeElement && document.activeElement.closest("#banner-form"))) {
+      var bn = Object.assign({ ativo: true, link: "https://cheers.com.br/evento/vacatio-legis-2026-36620", texto: "Garanta seu ingresso!!" }, D.evento.banner || {});
+      $("bn-ativo").checked = !!bn.ativo; $("bn-link").value = bn.link || ""; $("bn-texto").value = bn.texto || "";
+    }
   }
+  $("banner-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var bn = { ativo: $("bn-ativo").checked, link: $("bn-link").value.trim(), texto: $("bn-texto").value.trim() };
+    if (!/^https?:\/\//i.test(bn.link)) { toast("O link precisa começar com https://", true); return; }
+    save(function (d) { d.evento.banner = bn; }, bn.ativo ? "Banner salvo e visível no site" : "Banner salvo e oculto no site");
+  });
   $("evento-form").addEventListener("submit", function (e) {
     e.preventDefault();
     var nome = $("ev-nome").value.trim(), aviso = $("ev-aviso").value.trim(), popup = $("ev-popup").value.trim();

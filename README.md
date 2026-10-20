@@ -41,6 +41,13 @@ Para o site em um subdomínio (ex.: `jogos.seudominio.com.br`), crie o subdomín
 
 Para trocar a senha, edite `api/config.php` no Gerenciador de Arquivos. Quem estiver logado precisará entrar de novo.
 
+## Banner da festa
+
+- Telas grandes (a partir de 1340 px de largura): banner vertical fixo na margem direita (`assets/banner-festa-lateral.webp`, 480×960).
+- Celular e tablet: banner horizontal entre os filtros e os jogos (`assets/banner-festa-horizontal.webp`, 1080×540).
+- Botão roxo pulsante abaixo da imagem; imagem e botão levam ao link de compra.
+- Em **Admin → Evento → Banner da festa**: ligar/desligar, trocar o link e o texto do botão. Para trocar as imagens, substitua os dois arquivos acima no Gerenciador de Arquivos, mantendo os nomes.
+
 ## Torcidômetro e pop-up
 
 - Abaixo de cada jogo, o público toca no lado do time para o qual torce e a barra mostra a divisão em %. Um voto por pessoa e jogo, controlado no navegador; o servidor limita 120 votos por minuto por IP (ajustável em `api/config.php`). Não impede fraude deliberada (limpar o navegador permite votar de novo): trate como brincadeira, não como pesquisa.

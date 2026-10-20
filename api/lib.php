@@ -123,6 +123,13 @@ function validar(array $d): string {
     if (!is_array($ev) || !texto_opc($ev['aviso'] ?? null, 400) || !texto_opc($ev['popup'] ?? null, 400) || !texto_opc($ev['nome'] ?? null, 80)) {
         return 'Dados do evento inválidos.';
     }
+    if (isset($ev['banner'])) {
+        $b = $ev['banner'];
+        if (!is_array($b) || !is_bool($b['ativo'] ?? null) || !texto_ok($b['texto'] ?? null, 40)
+            || !is_string($b['link'] ?? null) || mb_strlen($b['link']) > 300 || !preg_match('#^https?://[^\s"<>]+$#i', $b['link'])) {
+            return 'Dados do banner inválidos: confira o link (deve começar com https://) e o texto do botão.';
+        }
+    }
     foreach (['modalidades', 'locais', 'equipes'] as $nome) {
         $col = $d[$nome] ?? null;
         if (!is_array($col) || (array_is_list($col) && count($col) > 0)) return "Lista de $nome inválida.";

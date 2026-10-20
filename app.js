@@ -7,6 +7,7 @@
   var STORE_KEY = "jud2k26:equipe";
   var VOTES_KEY = "jud2k26:votos";
   var POPUP_KEY = "jud2k26:aviso-visto";
+  var BANNER_PADRAO = { ativo: true, link: "https://cheers.com.br/evento/vacatio-legis-2026-36620", texto: "Garanta seu ingresso!!" };
   var POPUP_PADRAO = "Site em fase de teste. Tabela de acompanhamento. Em caso de divergência, prevalece a súmula oficial da organização.";
   var DIAS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
   var DIAS_LONGO = ["DOMINGO", "SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"];
@@ -104,6 +105,19 @@
         if (res.status === 409) { T[id] = before; renderJogos(); toast(res.b.erro || "Votação encerrada."); return; }
         undo(res.b.erro || "Não foi possível registrar o voto. Tente de novo.");
       }, function () { undo("Sem conexão. O voto não foi registrado."); });
+  }
+
+  // ---------- banner da festa ----------
+  function renderPromo() {
+    var b = Object.assign({}, BANNER_PADRAO, (D && D.evento.banner) || {});
+    var ok = b.ativo && /^https?:\/\//i.test(b.link || "");
+    ["promo-side", "promo-inline"].forEach(function (id) {
+      var el = $(id); if (!el) return;
+      el.hidden = !ok;
+      if (!ok) return;
+      el.querySelectorAll("a").forEach(function (a) { a.href = b.link; });
+      el.querySelector(".promo-btn").textContent = b.texto || BANNER_PADRAO.texto;
+    });
   }
 
   // ---------- aviso inicial ----------
@@ -266,6 +280,7 @@
 
   // ---------- render ----------
   function render() {
+    renderPromo();
     renderFilters();
     renderJogos();
 

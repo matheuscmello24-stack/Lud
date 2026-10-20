@@ -4,7 +4,12 @@
     "subtitulo": "Tabela de jogos e resultados",
     "atualizadoEm": "2026-10-17T07:00:00-03:00",
     "aviso": "Tabela de acompanhamento. Em caso de divergência, prevalece a súmula oficial da organização.",
-    "popup": "Site em fase de teste. Tabela de acompanhamento. Em caso de divergência, prevalece a súmula oficial da organização."
+    "popup": "Site em fase de teste. Tabela de acompanhamento. Em caso de divergência, prevalece a súmula oficial da organização.",
+    "banner": {
+      "ativo": true,
+      "link": "https://cheers.com.br/evento/vacatio-legis-2026-36620",
+      "texto": "Garanta seu ingresso!!"
+    }
   },
   "modalidades": {
     "HAND": {

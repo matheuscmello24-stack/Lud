@@ -150,6 +150,16 @@
           <p class="muted small">Aparece uma vez por visita, com o botão "Entendi". Deixe em branco para usar o texto padrão.</p>
           <div class="actions"><button type="submit" class="btn primary">Salvar</button></div>
         </form>
+        <form id="banner-form" class="card">
+          <h2>Banner da festa</h2>
+          <p class="muted small">Banner com botão de compra: na lateral direita em telas grandes e acima dos jogos no celular. Para trocar as imagens, substitua os arquivos <code>assets/banner-festa-lateral.webp</code> (480×960) e <code>assets/banner-festa-horizontal.webp</code> (1080×540).</p>
+          <label class="check big"><input type="checkbox" id="bn-ativo"> Mostrar o banner no site</label>
+          <label for="bn-link">Link de compra</label>
+          <input id="bn-link" type="url" maxlength="300" placeholder="https://..." required>
+          <label for="bn-texto">Texto do botão</label>
+          <input id="bn-texto" maxlength="40" required>
+          <div class="actions"><button type="submit" class="btn primary">Salvar banner</button></div>
+        </form>
         <section class="card">
           <h2>Backup</h2>
           <p class="muted small">Baixa uma cópia de todos os dados (jogos, placares e cadastros) em JSON. Faça ao fim de cada dia.</p>

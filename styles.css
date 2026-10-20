@@ -182,6 +182,41 @@ img { max-width: 100%; }
   .t-info { font-size: 11px; }
 }
 
+/* ---------- Banner da festa ---------- */
+:root { --festa: #7a16c4; --festa-escuro: #500080; --festa-luz: #a050d0; }
+.promo { display: flex; flex-direction: column; gap: 10px; }
+.promo-img { display: block; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(40, 0, 80, .35); }
+.promo-img img { display: block; width: 100%; height: auto; }
+.promo-btn {
+  display: block; text-align: center; text-decoration: none; color: #fff;
+  font-family: var(--display); font-size: 20px; letter-spacing: .03em; text-transform: uppercase; line-height: 1;
+  padding: 15px 14px; border-radius: 12px;
+  background: linear-gradient(180deg, var(--festa-luz) 0%, var(--festa) 45%, var(--festa-escuro) 100%);
+  border: 2px solid rgba(255, 255, 255, .35);
+  animation: festa-pulso 1.8s ease-out infinite;
+}
+.promo-btn:hover { filter: brightness(1.12); }
+.promo-btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+@keyframes festa-pulso {
+  0%   { box-shadow: 0 0 0 0 rgba(160, 80, 208, .85), 0 0 12px 2px rgba(160, 80, 208, .6); }
+  70%  { box-shadow: 0 0 0 16px rgba(160, 80, 208, 0), 0 0 22px 6px rgba(160, 80, 208, .35); }
+  100% { box-shadow: 0 0 0 0 rgba(160, 80, 208, 0), 0 0 12px 2px rgba(160, 80, 208, .6); }
+}
+/* Phones and tablets: horizontal banner between the filters and the games. */
+.promo-inline { max-width: 640px; margin: 4px auto 6px; }
+.promo-side { display: none !important; }
+/* Wide screens: vertical banner fixed in the right margin; the inline one is hidden. */
+@media (min-width: 1340px) and (min-height: 600px) {
+  .promo-inline { display: none !important; }
+  .promo-side:not([hidden]) {
+    --pw: min(260px, calc((100vw - 880px) / 2 - 48px), calc((100vh - 120px) / 2));
+    display: flex !important; position: fixed; z-index: 3; top: 50%; translate: 0 -50%;
+    width: var(--pw);
+    right: max(24px, calc((100vw - 880px) / 4 - var(--pw) / 2)); /* centred in the right margin */
+  }
+  .promo-side .promo-btn { font-size: 17px; padding: 13px 10px; }
+}
+
 /* ---------- Pop-up de aviso ---------- */
 .popup {
   width: min(420px, calc(100% - 32px)); border: 0; padding: 28px 24px 22px; border-radius: 18px; text-align: center;
@@ -227,4 +262,5 @@ img { max-width: 100%; }
 }
 .toast.show { opacity: 1; translate: -50% 0; }
 
+@media (prefers-reduced-motion: reduce) { .promo-btn { animation: none; box-shadow: 0 0 16px 4px rgba(160, 80, 208, .6); } }
 @media (prefers-reduced-motion: reduce) { .toast, .t-side { transition: none; } .torcida.open .t-bar { animation: none; } }
