@@ -14,6 +14,8 @@ define('STORAGE', dirname(__DIR__) . '/storage');
 define('SEED', dirname(__DIR__) . '/data/seed.json');
 define('DADOS', STORAGE . '/dados.json');
 
+ini_set('display_errors', '0');
+header_remove('X-Powered-By');
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
@@ -39,6 +41,8 @@ function pasta(string $sub = ''): string {
 }
 
 function corpo_json(): array {
+    // Only JSON bodies: a cross-site HTML form cannot send this content type without the browser asking first.
+    if (stripos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== 0) responder(['erro' => 'Requisição inválida.'], 415);
     $raw = file_get_contents('php://input', false, null, 0, 600 * 1024);
     $d = json_decode($raw ?: '', true);
     if (!is_array($d)) responder(['erro' => 'Requisição inválida.'], 400);
@@ -126,7 +130,7 @@ function validar(array $d): string {
     if (isset($ev['banner'])) {
         $b = $ev['banner'];
         if (!is_array($b) || !is_bool($b['ativo'] ?? null) || !texto_ok($b['texto'] ?? null, 40)
-            || !is_string($b['link'] ?? null) || mb_strlen($b['link']) > 300 || !preg_match('#^https?://[^\s"<>]+$#i', $b['link'])) {
+            || !is_string($b['link'] ?? null) || mb_strlen($b['link']) > 300 || !preg_match('#^https://[^\s"<>]+$#i', $b['link'])) {
             return 'Dados do banner inválidos: confira o link (deve começar com https://) e o texto do botão.';
         }
     }

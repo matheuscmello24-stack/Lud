@@ -63,3 +63,13 @@ Para trocar a senha, edite `api/config.php` no Gerenciador de Arquivos. Quem est
 ## Testar no computador
 
 Com PHP 8.1+ instalado, na pasta do projeto: `php -S localhost:8000` e abra `http://localhost:8000` e `http://localhost:8000/admin/`. O servidor embutido do PHP ignora o `.htaccess`; as proteções de pasta só valem na Hostinger.
+
+## Segurança
+
+- Nenhum recurso externo: fontes (Anton, Archivo, Poppins) servidas de `assets/fonts`, sem Google Fonts. Isso permite a Content Security Policy restrita do `.htaccess`.
+- `.htaccess` envia: Content-Security-Policy, X-Frame-Options DENY, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, Cross-Origin-Opener-Policy e HSTS (só em HTTPS); força HTTPS; bloqueia listagem de pastas, arquivos ocultos e `.md/.txt/.log/.bak/.zip/.sql/.ini/.sh`.
+- `storage/` e `api/config.php`/`api/lib.php` bloqueados para o navegador.
+- A API só aceita corpo JSON (bloqueia envio por formulários de outros sites), limita senhas erradas por IP, não exibe erros do PHP nem a versão do servidor.
+- Todo dado inserido em HTML passa por escape; links externos com `rel="noopener"`; link do banner só aceita `https://`.
+- Este README **não** vai no pacote de publicação.
+

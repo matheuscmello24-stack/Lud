@@ -2,6 +2,7 @@
 Options -Indexes
 AddDefaultCharset UTF-8
 DirectoryIndex index.html
+ServerSignature Off
 
 # Força HTTPS (ative o SSL gratuito no hPanel antes)
 <IfModule mod_rewrite.c>
@@ -11,17 +12,41 @@ DirectoryIndex index.html
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </IfModule>
 
+# Arquivos que não devem ser servidos: ocultos, documentação, backups e temporários.
+<FilesMatch "(^\.|\.(md|txt|log|lock|tmp|bak|sql|zip|ini|sh)$)">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
 <IfModule mod_headers.c>
+  # Cabeçalhos de segurança
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+  # HSTS: só é enviado em conexões HTTPS
+  Header always set Strict-Transport-Security "max-age=31536000" env=HTTPS
+  Header always unset X-Powered-By
+  Header unset X-Powered-By
+
   # Páginas e dados sempre atualizados; imagens e fontes em cache por 7 dias.
   <FilesMatch "\.(html|js|css|json)$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
-  <FilesMatch "\.(png|webp|ttf)$">
+  <FilesMatch "\.(png|webp|ttf|woff2)$">
     Header set Cache-Control "public, max-age=604800"
   </FilesMatch>
 </IfModule>
 
 <IfModule mod_mime.c>
   AddType font/ttf .ttf
+  AddType font/woff2 .woff2
   AddType image/webp .webp
 </IfModule>

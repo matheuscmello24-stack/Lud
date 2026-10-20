@@ -65,11 +65,11 @@
 
   function torcidaHTML(g) {
     var c = T[g.id] || { h: 0, a: 0 };
-    var total = c.h + c.a;
+    var total = (+c.h || 0) + (+c.a || 0);
     var mine = myVotes()[g.id];
     var closed = finished(g);
     var open = !closed && !mine;
-    var ph = total ? Math.round((c.h / total) * 100) : 50;
+    var ph = total ? Math.round(((+c.h || 0) / total) * 100) : 50;
     var pa = 100 - ph;
     // Keep each side wide enough to read and tap.
     var wh = Math.min(85, Math.max(15, ph));
@@ -79,7 +79,7 @@
       var label = total ? "<b>" + pct + "%</b>" : "";
       var name = '<span class="t-name">' + esc(shortName(team)) + "</span>";
       return '<button type="button" class="t-side ' + lado + (mine === lado ? " chosen" : "") + (w < 30 ? " narrow" : "") +
-        '" style="width:' + w + '%" data-lado="' + lado + '"' + (open ? "" : " disabled") +
+        '" data-w="' + w + '" data-lado="' + lado + '"' + (open ? "" : " disabled") +
         ' aria-label="Torcer por ' + esc(shortName(team)) + (total ? ", " + pct + "% dos votos" : "") + '">' +
         (lado === "h" ? label + name : name + label) + "</button>";
     }
@@ -110,7 +110,7 @@
   // ---------- banner da festa ----------
   function renderPromo() {
     var b = Object.assign({}, BANNER_PADRAO, (D && D.evento.banner) || {});
-    var ok = b.ativo && /^https?:\/\//i.test(b.link || "");
+    var ok = b.ativo && /^https:\/\/[^\s"<>]+$/i.test(b.link || "");
     ["promo-side", "promo-inline"].forEach(function (id) {
       var el = $(id); if (!el) return;
       el.hidden = !ok;
@@ -191,7 +191,7 @@
     var today = todayISO();
     $("days").innerHTML = dias.map(function (d) {
       var dt = parseISO(d);
-      return '<button class="day' + (d === today ? " today" : "") + '" data-v="' + d + '" aria-pressed="' + (d === state.dia) + '"><b>' +
+      return '<button class="day' + (d === today ? " today" : "") + '" data-v="' + esc(d) + '" aria-pressed="' + (d === state.dia) + '"><b>' +
         DIAS[dt.getDay()] + "</b><small>" + String(dt.getDate()).padStart(2, "0") + "/" + String(dt.getMonth() + 1).padStart(2, "0") + "</small></button>";
     }).join("");
 
@@ -235,8 +235,8 @@
     var scored = !wo && done && hasScore(g);
     var left = wo ? (wo === "h" ? "W" : "O") : scored ? g.placar[0] : "";
     var right = wo ? (wo === "a" ? "W" : "O") : scored ? g.placar[1] : "";
-    var sh = '<div class="sc' + (left !== "" ? " home-sc" : "") + '">' + left + "</div>";
-    var sa = '<div class="sc' + (right !== "" ? " away-sc" : "") + '">' + right + "</div>";
+    var sh = '<div class="sc' + (left !== "" ? " home-sc" : "") + '">' + esc(left) + "</div>";
+    var sa = '<div class="sc' + (right !== "" ? " away-sc" : "") + '">' + esc(right) + "</div>";
     var status = "";
     if (g.status === "encerrado") status = '<span class="tag">Final</span>';
     else if (g.status === "wo") status = '<span class="tag">W.O.</span>';
@@ -276,6 +276,7 @@
         games.map(function (g) { return gameHTML(g, mine); }).join("") + "</section>";
     });
     $("view-jogos").innerHTML = html;
+    $("view-jogos").querySelectorAll(".t-side[data-w]").forEach(function (el) { el.style.width = el.dataset.w + "%"; });
   }
 
   // ---------- render ----------

@@ -132,11 +132,11 @@
       ui.dia = ds.indexOf(t) >= 0 ? t : (ds.find(function (d) { return d >= t; }) || ds[ds.length - 1] || "");
     }
     $("dias").innerHTML = ds.map(function (d) {
-      return '<button type="button" class="chip" data-v="' + d + '" aria-pressed="' + (d === ui.dia) + '">' + dayLabel(d) + "</button>";
+      return '<button type="button" class="chip" data-v="' + esc(d) + '" aria-pressed="' + (d === ui.dia) + '">' + esc(dayLabel(d)) + "</button>";
     }).join("") + '<button type="button" class="chip novo" data-novo="1">+ Novo dia</button>';
     var ls = Object.keys(D.locais);
     $("locais").innerHTML = ls.length > 1 ? ['<button type="button" class="chip" data-v="" aria-pressed="' + (!ui.local) + '">Todos os locais</button>']
-      .concat(ls.map(function (k) { return '<button type="button" class="chip" data-v="' + k + '" aria-pressed="' + (k === ui.local) + '">' + esc(D.locais[k].nome) + "</button>"; })).join("") : "";
+      .concat(ls.map(function (k) { return '<button type="button" class="chip" data-v="' + esc(k) + '" aria-pressed="' + (k === ui.local) + '">' + esc(D.locais[k].nome) + "</button>"; })).join("") : "";
     $("filters").hidden = ui.tab === "cadastros" || ui.tab === "evento";
   }
   function dayGames(useLocal) {
@@ -158,12 +158,12 @@
       var isWo = g.status === "wo";
       var woV = g.vencedor || (isWo && g.placar ? (g.placar[0] >= g.placar[1] ? "h" : "a") : "");
       html += '<form class="card res ' + (g.naipe === "M" ? "m" : "f") + '" data-id="' + esc(g.id) + '">' +
-        '<div class="res-head"><b>' + esc(g.hora) + "</b><span>" + esc(mod.nome) + " " + NAIPE[g.naipe] + '</span><span class="state ' + g.status + '">' + STATUS[g.status] + "</span></div>" +
+        '<div class="res-head"><b>' + esc(g.hora) + "</b><span>" + esc(mod.nome) + " " + NAIPE[g.naipe] + '</span><span class="state ' + esc(g.status) + '">' + esc(STATUS[g.status] || g.status) + "</span></div>" +
         '<div class="score-row"' + (isWo ? " hidden" : "") + ">" +
           '<span class="t">' + esc(teamName(g.mandante)) + "</span>" +
-          '<input type="number" inputmode="numeric" min="0" max="999" name="sh" id="sh-' + esc(g.id) + '" value="' + p[0] + '" aria-label="Placar de ' + esc(teamName(g.mandante)) + '">' +
+          '<input type="number" inputmode="numeric" min="0" max="999" name="sh" id="sh-' + esc(g.id) + '" value="' + esc(p[0]) + '" aria-label="Placar de ' + esc(teamName(g.mandante)) + '">' +
           '<span class="x">×</span>' +
-          '<input type="number" inputmode="numeric" min="0" max="999" name="sa" id="sa-' + esc(g.id) + '" value="' + p[1] + '" aria-label="Placar de ' + esc(teamName(g.visitante)) + '">' +
+          '<input type="number" inputmode="numeric" min="0" max="999" name="sa" id="sa-' + esc(g.id) + '" value="' + esc(p[1]) + '" aria-label="Placar de ' + esc(teamName(g.visitante)) + '">' +
           '<span class="t r">' + esc(teamName(g.visitante)) + "</span>" +
         "</div>" +
         '<fieldset class="wo-pick"' + (isWo ? "" : " hidden") + '><legend>Quem compareceu (vence por W.O.)</legend>' +
@@ -275,8 +275,8 @@
       return '<div class="row ' + (g.naipe === "M" ? "m" : "f") + (g.id === ui.editing ? " editing" : "") + '" data-id="' + esc(g.id) + '">' +
         '<span class="h">' + esc(g.hora) + "</span>" +
         '<span class="d"><b>' + esc(teamName(g.mandante)) + " × " + esc(teamName(g.visitante)) + "</b><small>" +
-          esc(mod.nome) + " " + NAIPE[g.naipe] + " · " + esc((D.locais[g.local] || {}).nome || g.local) + " · " + STATUS[g.status] +
-          (g.status === "wo" && g.vencedor ? " (vence " + esc(teamName(g.vencedor === "h" ? g.mandante : g.visitante)) + ")" : g.placar ? " " + g.placar[0] + "×" + g.placar[1] : "") + "</small></span>" +
+          esc(mod.nome) + " " + NAIPE[g.naipe] + " · " + esc((D.locais[g.local] || {}).nome || g.local) + " · " + esc(STATUS[g.status] || g.status) +
+          (g.status === "wo" && g.vencedor ? " (vence " + esc(teamName(g.vencedor === "h" ? g.mandante : g.visitante)) + ")" : g.placar ? " " + esc(g.placar[0]) + "×" + esc(g.placar[1]) : "") + "</small></span>" +
         '<span class="b"><button type="button" class="btn sm" data-acao="editar">Editar</button><button type="button" class="btn sm danger" data-acao="excluir">Excluir</button></span>' +
         "</div>";
     }).join("") : '<div class="empty">Nenhum jogo neste dia.</div>';
@@ -524,7 +524,7 @@
   $("banner-form").addEventListener("submit", function (e) {
     e.preventDefault();
     var bn = { ativo: $("bn-ativo").checked, link: $("bn-link").value.trim(), texto: $("bn-texto").value.trim() };
-    if (!/^https?:\/\//i.test(bn.link)) { toast("O link precisa começar com https://", true); return; }
+    if (!/^https:\/\/[^\s"<>]+$/i.test(bn.link)) { toast("O link precisa começar com https://", true); return; }
     save(function (d) { d.evento.banner = bn; }, bn.ativo ? "Banner salvo e visível no site" : "Banner salvo e oculto no site");
   });
   $("evento-form").addEventListener("submit", function (e) {

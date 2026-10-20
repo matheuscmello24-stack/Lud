@@ -7,9 +7,6 @@
   <title>JUD 2K26 · Admin</title>
   <meta name="theme-color" content="#0b1b3a">
   <link rel="icon" href="../assets/logo-jud.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="admin.css">
 </head>
 <body>
@@ -29,7 +26,7 @@
     <section id="login" class="card login" hidden>
       <h1>Entrar no admin</h1>
       <p class="muted">Use a senha definida pela organização.</p>
-      <form id="login-form" autocomplete="on">
+      <form id="login-form" method="post" autocomplete="on">
         <label for="senha">Senha</label>
         <input type="password" id="senha" name="senha" autocomplete="current-password" required>
         <button type="submit" class="btn primary">Entrar</button>
@@ -58,7 +55,7 @@
 
       <!-- Jogos -->
       <div class="panel" data-panel="jogos" hidden>
-        <form id="jogo-form" class="card">
+        <form id="jogo-form" method="post" class="card">
           <h2 id="jogo-form-titulo">Novo jogo</h2>
           <div class="grid">
             <div><label for="j-data">Data</label><input type="date" id="j-data" required></div>
@@ -110,7 +107,7 @@
           <h2>Equipes</h2>
           <p class="muted small">O complemento aparece em itálico fino depois do nome (ex.: UNIFACS <em>SSA</em>).</p>
           <div id="cad-equipes" class="cad"></div>
-          <form class="cad-add" data-tipo="equipes">
+          <form class="cad-add" method="post" data-tipo="equipes">
             <input name="nome" placeholder="Nome (ex.: UNIFACS)" aria-label="Nome da nova equipe" required maxlength="40">
             <input name="destaque" placeholder="Complemento (opcional)" aria-label="Complemento" maxlength="20">
             <button class="btn primary" type="submit">Adicionar</button>
@@ -119,7 +116,7 @@
         <section class="card">
           <h2>Locais</h2>
           <div id="cad-locais" class="cad"></div>
-          <form class="cad-add" data-tipo="locais">
+          <form class="cad-add" method="post" data-tipo="locais">
             <input name="nome" placeholder="Nome (ex.: IFBA 3)" aria-label="Nome do novo local" required maxlength="40">
             <button class="btn primary" type="submit">Adicionar</button>
           </form>
@@ -128,7 +125,7 @@
           <h2>Modalidades</h2>
           <p class="muted small">A sigla aparece na barra do jogo (ex.: HAND, FUT). Marque "sets" para mostrar o campo de parciais.</p>
           <div id="cad-modalidades" class="cad"></div>
-          <form class="cad-add" data-tipo="modalidades">
+          <form class="cad-add" method="post" data-tipo="modalidades">
             <input name="nome" placeholder="Nome (ex.: Handebol)" aria-label="Nome da nova modalidade" required maxlength="40">
             <input name="curto" placeholder="Sigla (ex.: HAND)" aria-label="Sigla" required maxlength="12">
             <label class="check"><input type="checkbox" name="sets"> sets</label>
@@ -139,7 +136,7 @@
 
       <!-- Evento -->
       <div class="panel" data-panel="evento" hidden>
-        <form id="evento-form" class="card">
+        <form id="evento-form" method="post" class="card">
           <h2>Evento</h2>
           <label for="ev-nome">Nome do evento</label>
           <input id="ev-nome" maxlength="80" required>
@@ -150,12 +147,12 @@
           <p class="muted small">Aparece uma vez por visita, com o botão "Entendi". Deixe em branco para usar o texto padrão.</p>
           <div class="actions"><button type="submit" class="btn primary">Salvar</button></div>
         </form>
-        <form id="banner-form" class="card">
+        <form id="banner-form" method="post" class="card">
           <h2>Banner da festa</h2>
           <p class="muted small">Banner com botão de compra: na lateral direita em telas grandes e acima dos jogos no celular. Para trocar as imagens, substitua os arquivos <code>assets/banner-festa-lateral.webp</code> (480×960) e <code>assets/banner-festa-horizontal.webp</code> (1080×540).</p>
           <label class="check big"><input type="checkbox" id="bn-ativo"> Mostrar o banner no site</label>
           <label for="bn-link">Link de compra</label>
-          <input id="bn-link" type="url" maxlength="300" placeholder="https://..." required>
+          <input id="bn-link" type="url" maxlength="300" placeholder="https://..." pattern="https://.+" required>
           <label for="bn-texto">Texto do botão</label>
           <input id="bn-texto" maxlength="40" required>
           <div class="actions"><button type="submit" class="btn primary">Salvar banner</button></div>
