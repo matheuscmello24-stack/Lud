@@ -7,4 +7,4 @@ Disallow: /api/salvar.php
 Disallow: /api/votar.php
 # api/data.php e api/torcida.php ficam liberados: o Google precisa deles para ver os jogos na página.
 
-Sitemap: https://SEU-DOMINIO.com.br/sitemap.xml
+Sitemap: https://judnordeste.com/sitemap.xml

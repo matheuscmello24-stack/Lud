@@ -75,8 +75,8 @@ Com PHP 8.1+ instalado, na pasta do projeto: `php -S localhost:8000` e abra `htt
 
 ## SEO
 
-- `index.html`: title (50 caracteres), description (147), canonical, Open Graph, Twitter Card, JSON-LD `SportsEvent` (local, organizador, contato, área atendida e horário de atendimento).
+- `index.html`: title (50 caracteres), description (147), canonical, Open Graph, Twitter Card, JSON-LD `SportsEvent` (período 17/10 a 01/11/2026, locais IFBA, ADELBA e AABB, organizador e área atendida).
 - `assets/og-image.jpg` (1200×630): imagem de compartilhamento.
 - `robots.txt` e `sitemap.xml` na raiz. O robots libera `api/data.php` e `api/torcida.php`, que o Google precisa para ver os jogos.
-- **Antes de publicar**, substitua em `index.html`, `robots.txt` e `sitemap.xml`: `https://SEU-DOMINIO.com.br` pelo domínio real; no JSON-LD, `+55-71-PREENCHER`, `PREENCHER@SEU-DOMINIO.com.br` e `PREENCHER-AAAA-MM-DD` (data de término).
+- Domínio configurado: `https://judnordeste.com`. Se mudar, substitua em `index.html`, `robots.txt` e `sitemap.xml`.
 
