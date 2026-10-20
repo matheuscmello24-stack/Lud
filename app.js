@@ -217,7 +217,7 @@
   }
 
   // ---------- games ----------
-  function gameHTML(g, mine) {
+  function gameHTML(g, mine, lazyVs) {
     var mod = D.modalidades[g.modalidade] || { nome: g.modalidade, curto: g.modalidade };
     var local = (D.locais[g.local] || { nome: g.local }).nome;
     var done = finished(g);
@@ -250,7 +250,7 @@
       '<div class="bar">' +
         '<div class="when"><span class="hora">' + esc(g.hora) + '</span><span class="mod-m">' + esc(mod.curto) + "</span>" + status + "</div>" +
         teamHTML(g.mandante, hc) + sh +
-        '<div class="vs"><img src="assets/vs.png" alt="contra">' + sets + "</div>" +
+        '<div class="vs"><img src="assets/vs.png" width="147" height="75" alt="versus"' + (lazyVs ? ' loading="lazy" decoding="async"' : "") + ">" + sets + "</div>" +
         sa + teamHTML(g.visitante, ac) +
         '<div class="mod">' + esc(mod.curto) + "</div>" +
       "</div>" +
@@ -269,11 +269,11 @@
     var order = Object.keys(D.locais);
     var byLocal = {};
     list.forEach(function (g) { (byLocal[g.local] = byLocal[g.local] || []).push(g); });
-    var html = "";
+    var html = "", shown = 0;   // the first few games are above the fold; the rest load lazily
     Object.keys(byLocal).sort(function (a, b) { return order.indexOf(a) - order.indexOf(b); }).forEach(function (k) {
       var games = byLocal[k].sort(function (a, b) { return a.hora.localeCompare(b.hora); });
       html += '<section class="venue"><header class="venue-head"><h2>' + esc((D.locais[k] || { nome: k }).nome) + "</h2><span>" + dayLabel + "</span></header>" +
-        games.map(function (g) { return gameHTML(g, mine); }).join("") + "</section>";
+        games.map(function (g) { return gameHTML(g, mine, shown++ >= 4); }).join("") + "</section>";
     });
     $("view-jogos").innerHTML = html;
     $("view-jogos").querySelectorAll(".t-side[data-w]").forEach(function (el) { el.style.width = el.dataset.w + "%"; });

@@ -12,8 +12,8 @@ ServerSignature Off
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </IfModule>
 
-# Arquivos que não devem ser servidos: ocultos, documentação, backups e temporários.
-<FilesMatch "(^\.|\.(md|txt|log|lock|tmp|bak|sql|zip|ini|sh)$)">
+# Arquivos que não devem ser servidos: ocultos, documentação, backups e temporários (exceto robots.txt).
+<FilesMatch "(^\.|^(?!robots\.txt$).+\.(md|txt|log|lock|tmp|bak|sql|zip|ini|sh)$)">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>
@@ -40,7 +40,7 @@ ServerSignature Off
   <FilesMatch "\.(html|js|css|json)$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
-  <FilesMatch "\.(png|webp|ttf|woff2)$">
+  <FilesMatch "\.(png|webp|ttf|woff2|jpg)$">
     Header set Cache-Control "public, max-age=604800"
   </FilesMatch>
 </IfModule>
@@ -49,4 +49,5 @@ ServerSignature Off
   AddType font/ttf .ttf
   AddType font/woff2 .woff2
   AddType image/webp .webp
+  AddType application/xml .xml
 </IfModule>

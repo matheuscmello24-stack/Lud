@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /storage/
+Disallow: /api/login.php
+Disallow: /api/salvar.php
+Disallow: /api/votar.php
+# api/data.php e api/torcida.php ficam liberados: o Google precisa deles para ver os jogos na página.
+
+Sitemap: https://SEU-DOMINIO.com.br/sitemap.xml

@@ -264,7 +264,7 @@ img { max-width: 100%; }
 .foot { padding: 20px 16px 32px; text-align: center; border-top: 1px solid rgba(255,255,255,.25); }
 .legend-inline { display: flex; gap: 16px; justify-content: center; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 16px; }
 .legend-inline span { display: inline-flex; gap: 6px; align-items: center; }
-.apoio { width: 100%; max-width: 620px; }
+.apoio { width: 100%; max-width: 620px; height: auto; }
 
 .side-legend { display: none; }
 @media (min-width: 1100px) {

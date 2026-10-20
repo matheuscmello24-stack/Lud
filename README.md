@@ -73,3 +73,10 @@ Com PHP 8.1+ instalado, na pasta do projeto: `php -S localhost:8000` e abra `htt
 - Todo dado inserido em HTML passa por escape; links externos com `rel="noopener"`; link do banner só aceita `https://`.
 - Este README **não** vai no pacote de publicação.
 
+## SEO
+
+- `index.html`: title (50 caracteres), description (147), canonical, Open Graph, Twitter Card, JSON-LD `SportsEvent` (local, organizador, contato, área atendida e horário de atendimento).
+- `assets/og-image.jpg` (1200×630): imagem de compartilhamento.
+- `robots.txt` e `sitemap.xml` na raiz. O robots libera `api/data.php` e `api/torcida.php`, que o Google precisa para ver os jogos.
+- **Antes de publicar**, substitua em `index.html`, `robots.txt` e `sitemap.xml`: `https://SEU-DOMINIO.com.br` pelo domínio real; no JSON-LD, `+55-71-PREENCHER`, `PREENCHER@SEU-DOMINIO.com.br` e `PREENCHER-AAAA-MM-DD` (data de término).
+
